@@ -12,14 +12,16 @@ static void log(const int fd, const char * message) {
         perror("Unable to write to log");
         exit(1);
     }
+    if (write(fd, "\n", 1) < 0) {
+        perror("Unable to write to log");
+        exit(1);
+    }
 }
 
 static char * getLogFilePath(const char *path, char * fullPath) {
-    strcat(fullPath, path);
-    strcat(fullPath, "/");
-    strcat(fullPath, baseName);
+    strcpy(fullPath, path);
     //Get the full path of the file descriptor in wich you should add the log
-
+    strcat(fullPath, ".log");
     return fullPath;
 }
 
@@ -29,7 +31,11 @@ static int openLogFile(const char *path) {
     char fullPath[100] = {0};
 
     if (path == NULL) {
-         fd = open(baseName, O_CREAT | O_APPEND | O_WRONLY, S_IRUSR | S_IWUSR | S_IROTH);
+        char logFileName[20] = {0};
+        strcpy(logFileName, baseName);
+        strcat(logFileName, ".log");
+
+         fd = open(logFileName, O_CREAT | O_APPEND | O_WRONLY, S_IRUSR | S_IWUSR | S_IROTH);
     }
     else {
         //Check if main log file exists, else create it
@@ -38,8 +44,7 @@ static int openLogFile(const char *path) {
 
 
         getLogFilePath(path, fullPath);
-
-
+        printf("%s\n", fullPath);
         struct stat st;
 
         if (lstat(fullPath, &st) < 0) { //Symbolic link doesn't exist so need to create it
@@ -47,9 +52,10 @@ static int openLogFile(const char *path) {
             char baseFileName[100] = {0};
             strcpy(baseFileName, "../");
             strcat(baseFileName, baseName); //Path of the file relative to the folder where i want to make the symlink
+            strcat(baseFileName, ".log");
 
             if (symlink(baseFileName, fullPath) < 0) {
-                perror("Unable to open the symbolic link file");
+                perror("Unable to create the symbolik link");
                 exit(1);
             }
         }
@@ -69,7 +75,7 @@ static int openLogFile(const char *path) {
 void logInfo(const char *message, const char *path){
     const int fd = openLogFile(path);
 
-    write(fd, "[INFO LOG] : ", 12);
+    write(fd, "[INFO LOG] : ", 20);
 
     log(fd, message);
 
@@ -79,7 +85,7 @@ void logInfo(const char *message, const char *path){
 void logError(const char *message, const char *path) {
     const int fd = openLogFile(path);
 
-    write(fd, "[ERROR LOG] : ", 12);
+    write(fd, "[ERROR LOG] : ", 20);
 
     log(fd, message);
 
@@ -89,7 +95,17 @@ void logError(const char *message, const char *path) {
 void logWarning(const char *message, const char *path) {
     const int fd = openLogFile(path);
 
-    write(fd, "[WARNING LOG] : ", 12);
+    write(fd, "[WARNING LOG] : ", 20);
+
+    log(fd, message);
+
+    close(fd);
+}
+
+void logSuccess(const char *message, const char *path) {
+    const int fd = openLogFile(path);
+
+    write(fd, "[SUCCESS LOG] : ", 20);
 
     log(fd, message);
 
