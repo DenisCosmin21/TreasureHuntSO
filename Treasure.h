@@ -21,8 +21,11 @@ typedef struct {
     int value;
 } TreasureData;
 
-void addTreasure(const char *, TreasureData);
+void addTreasure(const char * huntId, TreasureData treasure);
 
 TreasureData askUserForInput(void);
 
+TreasureData getTreasureFromHunt(const char * huntId, const char * treasureId);
+
+void listTreasuresFromHunt(const char * huntId);
 #endif //TREASURE_H
