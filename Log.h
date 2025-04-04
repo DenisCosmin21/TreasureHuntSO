@@ -6,11 +6,11 @@
 #define LOG_H
 #define baseName "logged_hunt"
 
-void logInfo(const char *, const char *);
+void logInfo(const char *message, const char *path);
 
-void logError(const char *, const char *);
+void logError(const char *message, const char *path);
 
-void logWarning(const char *, const char *);
+void logWarning(const char *message, const char *path);
 
-void logSuccess(const char *, const char *);
+void logSuccess(const char *message, const char *path);
 #endif //LOG_H
