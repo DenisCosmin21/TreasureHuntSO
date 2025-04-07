@@ -21,6 +21,11 @@ typedef struct {
     int value;
 } TreasureData;
 
+typedef enum {
+    ADD_TREASURE,
+    REMOVE_TREASURE,
+}FileOperationSpecifier;
+
 void addTreasure(const char * huntId, TreasureData treasure);
 
 TreasureData askUserForInput(void);
@@ -28,4 +33,6 @@ TreasureData askUserForInput(void);
 TreasureData getTreasureFromHunt(const char * huntId, const char * treasureId);
 
 void listTreasuresFromHunt(const char * huntId);
+
+void removeTreasureFromHunt(const char * huntId, const char *treasureId);
 #endif //TREASURE_H

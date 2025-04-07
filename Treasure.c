@@ -15,7 +15,7 @@ static size_t getLineCountOfStorage(const int huntFd) {//Returns the line number
         exit(1);
     }
 
-    return st.st_size / sizeof(TreasureData);
+    return st.st_size / sizeof(TreasureData); //Only fixed size will be in the file, not any chance of having float data
 }
 
 static void printTreasureCoordinates(const Coords coordinates) {
@@ -76,7 +76,7 @@ static int existsHunt(const char *huntPath) {
     return stat(huntPath, &st) != -1; //Folder exists if result different then -1
 }
 
-static int openHuntTreasureStorage(const char *huntId) {
+static int openHuntTreasureStorage(const char *huntId, FileOperationSpecifier operation) {
     char huntPath[100] = {0};
     getHuntPathById(huntId, huntPath);
 
@@ -93,7 +93,18 @@ static int openHuntTreasureStorage(const char *huntId) {
     strcpy(treasurePath, huntPath);
     strcat(treasurePath, "/");
     strcat(treasurePath, baseTreasureListStorage);
-    const int huntFd = open(treasurePath, O_CREAT | O_APPEND | O_RDWR, S_IWUSR | S_IRUSR | S_IROTH);
+    int huntFd = 0;
+
+    switch (operation) {
+        case(ADD_TREASURE) :
+            huntFd = open(treasurePath, O_CREAT | O_APPEND | O_RDWR, S_IWUSR | S_IRUSR | S_IROTH);
+            break;
+        case(REMOVE_TREASURE) :
+            huntFd = open(treasurePath, O_CREAT | O_RDWR, S_IWUSR | S_IRUSR | S_IROTH);
+            break;
+        default :
+            break;
+    }
 
     if (huntFd < 0) {
         perror("Impossible to open file for the treaure storage");
@@ -139,7 +150,7 @@ static void logAddOperation(const char *huntId, const TreasureData treasure) { /
 }
 
 void addTreasure(const char * huntId, TreasureData treasure) {
-    int huntFd = openHuntTreasureStorage(huntId);
+    int huntFd = openHuntTreasureStorage(huntId, ADD_TREASURE);
 
     treasure.treasureId = getLastIdFromHunt(huntFd) + 1;
 
@@ -156,17 +167,21 @@ void addTreasure(const char * huntId, TreasureData treasure) {
 TreasureData askUserForInput(void) {
     TreasureData treasure;
 
+    printf("Username : ");
     fgets(treasure.userName, sizeof(treasure.userName), stdin);
     treasure.userName[strlen(treasure.userName) - 1] = '\0';
-
+    printf("Latitude : ");
     scanf("%f", &(treasure.coordinates.latitude));
+    printf("Longitude : ");
     scanf("%f", &(treasure.coordinates.longitude));
     getchar();
+    printf("ClueText : ");
     fgets(treasure.clueText, sizeof(treasure.clueText), stdin);
 
     treasure.clueText[strlen(treasure.clueText) - 1] = '\0';
+    printf("Value : ");
     scanf("%d", &(treasure.value));
-
+    getchar();
     return treasure;
 }
 
@@ -255,7 +270,7 @@ static void logGetTreasureOperation(const char * huntId, const TreasureData trea
 }
 
 TreasureData getTreasureFromHunt(const char * huntId, const char * treasureId) {
-    const int huntFd = openHuntTreasureStorage(huntId);
+    const int huntFd = openHuntTreasureStorage(huntId, ADD_TREASURE);
 
     TreasureData treasure = getTreasureFromStorageById(huntFd, strtol(treasureId, NULL, 10));
 
@@ -277,7 +292,7 @@ TreasureData getTreasureFromHunt(const char * huntId, const char * treasureId) {
 }
 
 void listTreasuresFromHunt(const char * huntId) {
-    const int huntFd = openHuntTreasureStorage(huntId);
+    const int huntFd = openHuntTreasureStorage(huntId, ADD_TREASURE);
 
     for (ssize_t i = 0;i < getLineCountOfStorage(huntFd); i++) {//We go line by line getting each treasure and showing it untill we reach the end of file wich we know by reaching the last line
         TreasureData treasure = readTreasureFromFile(huntFd);
@@ -288,6 +303,86 @@ void listTreasuresFromHunt(const char * huntId) {
     if (close(huntFd) == -1) { //Close the file descriptor
         perror("Impossible to close file");
         exit(1);
+    }
+}
+
+void removeEntireHunt(const char * huntId) {
+    char huntPath[100] = {0};
+    getHuntPathById(huntId, huntPath);//Get the hunt path that we will remove
+
+    rmdir(huntPath);
+}
+
+static void logRemoveTreasureOperation(const char * huntId, const char * treasureId) {
+    char logMessage[1024] = {0};
+
+    sprintf(logMessage, "Removing treasure with id %s from hunt %s", treasureId, huntId);
+    char huntPath[100] = {0};
+    getHuntPathById(huntId, huntPath);
+
+    char logPath[100] = {0};
+    strcpy(logPath, huntPath);
+    strcat(logPath, "/");
+    strcat(logPath, baseName);
+    strcat(logPath, "-");
+    strcat(logPath, huntId);
+
+    logInfo(logMessage, logPath);
+}
+
+void removeTreasureFromHunt(const char * huntId, const char *treasureId) {
+    const int huntFd = openHuntTreasureStorage(huntId, REMOVE_TREASURE);
+
+    ssize_t treasurePosition = findTreasurePosition(huntFd, strtol(treasureId, NULL, 10), 0, getLineCountOfStorage(huntFd));
+
+    if (treasurePosition == -1){//Check if the specified treasure exists
+        perror("Impossible to find treasure position");
+        exit(-1);
+    }
+
+    //After getting the treasure position from the file move the pointer to specified position
+    //first check if the treasure is the last one so that we won;t store data in buffer and we just delete it
+    if (treasurePosition != getLineCountOfStorage(huntFd)) {
+        if (lseek(huntFd, (treasurePosition + 1) * sizeof(TreasureData), SEEK_SET) == -1) { //We move to the next records
+            perror("Impossible to seek to treasure position");
+            exit(-1);
+        }
+
+        char readBuffer[sizeof(TreasureData)]; //use the buffer to store data from the file so that i can shift the dafa. In buffer i will svae the next record and so on
+        //As the buffer we can use the TreasureData type too but we do this for generalization ,and better understanding that we get bytes from the file
+        for (;treasurePosition < getLineCountOfStorage(huntFd) - 1;treasurePosition++) {
+            printf("%lld\n", treasurePosition);
+            printf("%lld\n", getLineCountOfStorage(huntFd));
+            if (read(huntFd, readBuffer, sizeof(TreasureData)) == -1) {//Read the data to buffer
+                perror("impossible to read from file");
+                exit(-1);
+            }
+
+            //After reading we have to move the cursor to the point where we want to insert the buffer
+            if (lseek(huntFd, treasurePosition * sizeof(TreasureData), SEEK_SET) == -1) {
+                perror("Impossible to seek to treasure position");
+                exit(-1);
+            }
+
+            if (write(huntFd, readBuffer, sizeof(TreasureData)) == -1) {
+                perror("Impossible to write to file");
+                exit(-1);
+            }
+        }
+    }
+
+    if (ftruncate(huntFd, (getLineCountOfStorage(huntFd) - 1) * sizeof(TreasureData)) == -1) {
+        perror("Impossible to truncate file");
+        exit(-1);
+    }
+
+    logRemoveTreasureOperation(huntId, treasureId);
+
+    listTreasuresFromHunt(huntId);//After that we show it to see changes
+
+    if (close(huntFd) == -1) {
+        perror("Impossible to close file");
+        exit(-1);
     }
 }
 
