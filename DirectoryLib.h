@@ -5,4 +5,5 @@
 #ifndef DIRECTORYLIB_H
 #define DIRECTORYLIB_H
 
+void removeDirectory(const char *treasureId);
 #endif //DIRECTORYLIB_H
