@@ -135,7 +135,7 @@ static void logAddOperation(const char *huntId, const TreasureData treasure) { /
     char json[1024] = {0};
     jsonEncodeTreasure(treasure, json);
     //Use a json format for the data to print as becouse of it's global usage
-    sprintf(logMessage, "Treasure with id %lu successfully added to Hunt with id : %s.\n %s", treasure.treasureId, huntId, json);
+    sprintf(logMessage, "Treasure with id %lu successfully added to Hunt with id \"%s\".\n %s", treasure.treasureId, huntId, json);
 
     char huntPath[100] = {0};
     getHuntPathById(huntId, huntPath);
@@ -391,23 +391,16 @@ void removeHunt(const char *huntId) {
     //First build the treasure folder name from the id
     char huntPath[100] = {0};
     char logMessage[1024] = {0};
-    char logPath[100] = {0};
-
-    strcpy(logPath, huntPath);
-    strcat(logPath, "/");
-    strcat(logPath, baseName);
-    strcat(logPath, "-");
-    strcat(logPath, huntId);
 
     getHuntPathById(huntId, huntPath);
 
     if (existsHunt(huntPath)) {//Check if hunt exists first
         removeDirectory(huntPath);
         sprintf(logMessage, "Removing hunt with id %s", huntId);
-        logSuccess(logMessage, logPath);
+        logSuccess(logMessage, NULL); //Becouse we remove the full hunt directory we need to log data in the main log file instead of the symbolik linked file
         return;
     }
 
     sprintf(logMessage, "Hunt with id %s not found.", huntId);
-    logError(logMessage, logPath);
+    logError(logMessage, NULL);
 }
