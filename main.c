@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include "Log.h"
 #include "Treasure.h"
+#include "DirectoryLib.h"
 
 #define basicPath "treasureHunt"
 
@@ -44,6 +45,8 @@ void parseOperation(const char * operation, const char **parameters, const size_
             printf("Usage : remove_treasure <hunt_id> <id>\n");
             exit(-1);
         }
+
+        removeTreasureFromHunt(parameters[0], parameters[1]);
     }
     else if (strcmp(operation, "remove_hunt") == 0) {
         if (parametersCount != 3) {
@@ -51,6 +54,8 @@ void parseOperation(const char * operation, const char **parameters, const size_
             printf("Usage : remove_hunt <hunt_id>\n");
             exit(-1);
         }
+
+        removeHunt(parameters[0]);
     }
     else {
         fprintf(stderr, "Invalid operation\n");
@@ -66,7 +71,10 @@ int main(const int argc, const char * argv[]) {
         exit(-1);
     }
 
-    parseOperation(argv[1], argv + 2, argc);
+
+        parseOperation(argv[1], argv + 2, argc);
+
+
 
 
     return 0;
