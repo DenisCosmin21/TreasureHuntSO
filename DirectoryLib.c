@@ -20,14 +20,12 @@ void removeDirectory(const char *directoryName) {
     }
 
     //Now we need to loop throught it's kids, and if one kid is directory we need to call the function recursively for it
-    struct dirent *entry;
+    struct dirent *entry = NULL;
     //First we need to iterate through the first 2 files that each directory have
-    entry = readdir(directory);
-    printf("%s\n", entry->d_name);
-    entry = readdir(directory);
-    printf("%s\n", entry->d_name);
-    printf("%s\n", directoryName);
     while ((entry = readdir(directory)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {//Pass over the case where we have the alis for current dir or parrent dir
+            continue;
+        }
         printf("%s\n", entry->d_name);
         //First we need to get the file type to see if it's directory or not
         struct stat st;
