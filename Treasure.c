@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include "Log.h"
+#include "DirectoryLib.h"
 
 static size_t getLineCountOfStorage(const int huntFd) {//Returns the line number from the storage
     struct stat st;
@@ -62,7 +63,7 @@ static size_t getLastIdFromHunt(const int huntFd) {
     return treasureId;
 }
 
-static char *getHuntPathById(const char *huntId, char *huntPath) {
+char *getHuntPathById(const char *huntId, char *huntPath) {
     //Hunt is of the form baseHuntName#huntId
     strcpy(huntPath, baseHuntName);
     strcat(huntPath, "#");
@@ -386,4 +387,27 @@ void removeTreasureFromHunt(const char * huntId, const char *treasureId) {
     }
 }
 
+void removeHunt(const char *huntId) {
+    //First build the treasure folder name from the id
+    char huntPath[100] = {0};
+    char logMessage[1024] = {0};
+    char logPath[100] = {0};
 
+    strcpy(logPath, huntPath);
+    strcat(logPath, "/");
+    strcat(logPath, baseName);
+    strcat(logPath, "-");
+    strcat(logPath, huntId);
+
+    getHuntPathById(huntId, huntPath);
+
+    if (existsHunt(huntPath)) {//Check if hunt exists first
+        removeDirectory(huntPath);
+        sprintf(logMessage, "Removing hunt with id %s", huntId);
+        logSuccess(logMessage, logPath);
+        return;
+    }
+
+    sprintf(logMessage, "Hunt with id %s not found.", huntId);
+    logError(logMessage, logPath);
+}

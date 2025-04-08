@@ -35,4 +35,8 @@ TreasureData getTreasureFromHunt(const char * huntId, const char * treasureId);
 void listTreasuresFromHunt(const char * huntId);
 
 void removeTreasureFromHunt(const char * huntId, const char *treasureId);
+
+char *getHuntPathById(const char *huntId, char *huntPath);
+
+void removeHunt(const char *huntId);
 #endif //TREASURE_H
