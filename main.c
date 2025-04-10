@@ -11,7 +11,7 @@
 #define basicPath "treasureHunt"
 
 void parseOperation(const char * operation, const char **parameters, const size_t parametersCount) {
-    if (strcmp(operation, "add") == 0) {
+    if (strcmp(operation, "--add") == 0) {
         if (parametersCount != 3) {
             fprintf(stderr, "Wrong number of arguments\n");
             printf("Usage : add <hunt_id>\n");
@@ -21,7 +21,7 @@ void parseOperation(const char * operation, const char **parameters, const size_
         TreasureData treasureToAdd = askUserForInput();
         addTreasure(parameters[0], treasureToAdd);
     }
-    else if (strcmp(operation, "list") == 0) {
+    else if (strcmp(operation, "--list") == 0) {
         if (parametersCount != 3) {
             fprintf(stderr, "Wrong number of arguments\n");
             printf("Usage : list <hunt_id>\n");
@@ -30,7 +30,7 @@ void parseOperation(const char * operation, const char **parameters, const size_
 
         listTreasuresFromHunt(parameters[0]);
     }
-    else if (strcmp(operation, "view") == 0) {
+    else if (strcmp(operation, "--view") == 0) {
         if (parametersCount != 4) {
             fprintf(stderr, "Wrong number of arguments\n");
             printf("Usage : view <hunt_id> <id>\n");
@@ -39,7 +39,7 @@ void parseOperation(const char * operation, const char **parameters, const size_
 
         TreasureData treasureReturned = getTreasureFromHunt(parameters[0], parameters[1]);
     }
-    else if (strcmp(operation, "remove_treasure") == 0) {
+    else if (strcmp(operation, "--remove_treasure") == 0) {
         if (parametersCount != 4) {
             fprintf(stderr, "Wrong number of arguments\n");
             printf("Usage : remove_treasure <hunt_id> <id>\n");
@@ -48,7 +48,7 @@ void parseOperation(const char * operation, const char **parameters, const size_
 
         removeTreasureFromHunt(parameters[0], parameters[1]);
     }
-    else if (strcmp(operation, "remove_hunt") == 0) {
+    else if (strcmp(operation, "--remove_hunt") == 0) {
         if (parametersCount != 3) {
             fprintf(stderr, "Wrong number of arguments\n");
             printf("Usage : remove_hunt <hunt_id>\n");
@@ -72,7 +72,7 @@ int main(const int argc, const char * argv[]) {
     }
 
 
-        parseOperation(argv[1], argv + 2, argc);
+    parseOperation(argv[1], argv + 2, argc);
 
 
 
