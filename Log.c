@@ -74,7 +74,7 @@ static int openLogFile(const char *path) {
 void logInfo(const char *message, const char *path){
     const int fd = openLogFile(path);
 
-    write(fd, "[INFO LOG] : ", 20);
+    write(fd, "[INFO LOG] : ", 13);
 
     log(fd, message);
 
@@ -84,7 +84,7 @@ void logInfo(const char *message, const char *path){
 void logError(const char *message, const char *path) {
     const int fd = openLogFile(path);
 
-    write(fd, "[ERROR LOG] : ", 20);
+    write(fd, "[ERROR LOG] : ", 14);
 
     log(fd, message);
 
@@ -94,7 +94,7 @@ void logError(const char *message, const char *path) {
 void logWarning(const char *message, const char *path) {
     const int fd = openLogFile(path);
 
-    write(fd, "[33m[WARNING LOG] : ", 20);
+    write(fd, "[WARNING LOG] : ", 16);
 
     log(fd, message);
 
@@ -104,7 +104,7 @@ void logWarning(const char *message, const char *path) {
 void logSuccess(const char *message, const char *path) {
     const int fd = openLogFile(path);
 
-    write(fd, "[SUCCESS LOG] : ", 20); //Add the color green for specific log type
+    write(fd, "[SUCCESS LOG] : ", 16); //Add the color green for specific log type
 
     log(fd, message);
     close(fd);
