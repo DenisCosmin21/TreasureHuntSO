@@ -26,7 +26,6 @@ void removeDirectory(const char *directoryName) {
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {//Pass over the case where we have the alis for current dir or parrent dir
             continue;
         }
-        printf("%s\n", entry->d_name);
         //First we need to get the file type to see if it's directory or not
         struct stat st;
 
@@ -40,7 +39,6 @@ void removeDirectory(const char *directoryName) {
 
         strcat(path, entry->d_name); //We need to compute the path for files too
 
-        printf("%s\n", path);
         if (stat(path, &st) == -1) { //We use stat method to see the type of the file becouse the dirent struct can;t be for sure on each system
             perror("Error in stat");
             exit(1);
