@@ -344,16 +344,15 @@ void removeTreasureFromHunt(const char * huntId, const char *treasureId) {
     //After getting the treasure position from the file move the pointer to specified position
     //first check if the treasure is the last one so that we won;t store data in buffer and we just delete it
     if (treasurePosition != getLineCountOfStorage(huntFd)) {
-        if (lseek(huntFd, (treasurePosition + 1) * sizeof(TreasureData), SEEK_SET) == -1) { //We move to the next records
-            perror("Impossible to seek to treasure position");
-            exit(-1);
-        }
-
         char readBuffer[sizeof(TreasureData)]; //use the buffer to store data from the file so that i can shift the dafa. In buffer i will svae the next record and so on
         //As the buffer we can use the TreasureData type too but we do this for generalization ,and better understanding that we get bytes from the file
         for (;treasurePosition < getLineCountOfStorage(huntFd) - 1;treasurePosition++) {
-            printf("%lld\n", treasurePosition);
-            printf("%lld\n", getLineCountOfStorage(huntFd));
+
+            if (lseek(huntFd, (treasurePosition + 1) * sizeof(TreasureData), SEEK_SET) == -1) { //We move the pointer to the next record
+                perror("Impossible to seek to treasure position");
+                exit(-1);
+            }
+
             if (read(huntFd, readBuffer, sizeof(TreasureData)) == -1) {//Read the data to buffer
                 perror("impossible to read from file");
                 exit(-1);
