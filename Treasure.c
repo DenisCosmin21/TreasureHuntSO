@@ -29,8 +29,13 @@ static void viewTreasure(const TreasureData treasureToView) {
     printf("value : %d\n", treasureToView.value);
 }
 
-static void jsonEncodeTreasure(const TreasureData treasure, char *json) {
+static char *jsonEncodeTreasure(const TreasureData treasure) {
+
+    static char json[1024] = "\0";
+
     sprintf(json, "{\n  \"treasudeId\" : \"%lu\",\n   \"userName\" : \"%s\",\n    \"Coordinates\" : [\n      \"Latitude\" : \"%f\",\n        \"Longitude\" : \"%f\"\n    ],\n    \"clueText\" : \"%s\",\n    \"value\" : \"%d\"\n}", treasure.treasureId, treasure.userName, treasure.coordinates.latitude, treasure.coordinates.longitude, treasure.clueText, treasure.value);
+
+    return json;
 }
 
 
@@ -108,10 +113,9 @@ static void writeTreasureToFile(const int huntFd, const TreasureData treasure) {
 
 static void logAddOperation(const char *huntId, const TreasureData treasure) { //Added specific log for add operation
     char logMessage[1024] = {0};
-    char json[1024] = {0};
-    jsonEncodeTreasure(treasure, json);
+
     //Use a json format for the data to print as becouse of it's global usage
-    sprintf(logMessage, "Treasure with id %lu successfully added to Hunt with id \"%s\".\n %s", treasure.treasureId, huntId, json);
+    sprintf(logMessage, "Treasure with id %lu successfully added to Hunt with id \"%s\".\n %s", treasure.treasureId, huntId, jsonEncodeTreasure(treasure));
 
     char huntPath[100] = {0};
     getHuntPathById(huntId, huntPath);
@@ -215,10 +219,8 @@ static TreasureData getTreasureFromStorageById(const int huntFd, const ssize_t t
 
 static void logGetTreasureOperation(const char * huntId, const TreasureData treasure) {
     char logMessage[1024] = {0};
-    char json[1024] = {0};
-    jsonEncodeTreasure(treasure, json);
     //Use a json format for the data to print as becouse of it's global usage
-    sprintf(logMessage, "Get treasure operation return data : \n%s", json);
+    sprintf(logMessage, "Get treasure operation return data : \n%s", jsonEncodeTreasure(treasure));
 
     char huntPath[100] = {0};
     getHuntPathById(huntId, huntPath);
@@ -254,6 +256,12 @@ TreasureData getTreasureFromHunt(const char * huntId, const char * treasureId) {
 
 void listTreasuresFromHunt(const char * huntId) {
     const int huntFd = openHuntTreasureStorage(huntId, ADD_TREASURE);
+
+    printf("Hunt name : %s\n", huntId);
+
+    printf("Hunt size : %lld\n", getFileSize(huntFd));
+
+    printf("Last modification : %s\n", getFileHumanReadableTime(huntFd));
 
     for (ssize_t i = 0;i < getLineCountOfStorage(huntFd); i++) {//We go line by line getting each treasure and showing it untill we reach the end of file wich we know by reaching the last line
         TreasureData treasure = readTreasureFromFile(huntFd);
