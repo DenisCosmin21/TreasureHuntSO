@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <time.h>
 
 
 int openFile(const char *path, const char *mode) { //Mode as characters, r => read, w => write, a => append, etc..
@@ -97,5 +98,21 @@ void truncateFile(const int fd, const __off_t length) {
         exit(-1);
     }
 }
+
+struct timespec getFileTime(const int fd) {
+    const struct stat st = getFdStat(fd);
+
+    return st.st_mtim;
+}
+
+char *getFileHumanReadableTime(const int fd) {
+    struct timespec t = {0, 0};
+
+    t = getFileTime(fd);
+
+    return ctime(&(t.tv_sec));
+}
+
+
 
 

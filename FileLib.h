@@ -26,4 +26,8 @@ void seekCursor(const int fd, const size_t offset, const int whence);
 size_t getFileSize(const int fd);
 
 void truncateFile(const int fd, const __off_t size);
+
+struct timespec getFileTime(const int fd);
+
+char *getFileHumanReadableTime(const int fd);
 #endif //FILELIB_H
