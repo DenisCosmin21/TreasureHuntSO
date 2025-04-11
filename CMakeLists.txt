@@ -9,4 +9,6 @@ add_executable(TreasureHunt main.c
         Treasure.h
         Treasure.c
         DirectoryLib.h
-        DirectoryLib.c)
+        DirectoryLib.c
+        FileLib.h
+        FileLib.c)

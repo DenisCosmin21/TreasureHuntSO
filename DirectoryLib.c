@@ -66,5 +66,14 @@ void removeDirectory(const char *directoryName) {
     //After removing the directory content we remove it too
 }
 
+int existsDirectory(const char *directoryName) {
+    struct stat st;
+    return stat(directoryName, &st) == 0; //Folder exists if return is 0
+}
 
-
+void createDirectory(const char *directoryName) {
+    if (mkdir(directoryName, 0777) == -1) {
+        perror("Error in making new directory");
+        exit(1);
+    }
+}

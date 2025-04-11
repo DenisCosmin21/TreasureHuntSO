@@ -8,15 +8,11 @@
 #include <stdlib.h>
 #include "Log.h"
 #include "DirectoryLib.h"
+#include "FileLib.h"
 
 static size_t getLineCountOfStorage(const int huntFd) {//Returns the line number from the storage
-    struct stat st;
-    if (fstat(huntFd, &st) == -1) {
-        perror("Impossible to verify file");
-        exit(1);
-    }
 
-    return st.st_size / sizeof(TreasureData); //Only fixed size will be in the file, not any chance of having float data
+    return getFileSize(huntFd) / sizeof(TreasureData); //Only fixed size will be in the file, not any chance of having float data
 }
 
 static void printTreasureCoordinates(const Coords coordinates) {
@@ -39,26 +35,17 @@ static void jsonEncodeTreasure(const TreasureData treasure, char *json) {
 
 
 static size_t getLastIdFromHunt(const int huntFd) {
-    struct stat st;
-    if (fstat(huntFd, &st) == -1) {
-        perror("Error when checking treasure storage size");
-        exit(1);
-    }
-
-    if (st.st_size == 0) { //If the file is emtpy we have no records, so we return 0
+    if (getFileSize(huntFd) == 0) { //If the file is emtpy we have no records, so we return 0
         return 0;
     }
     //Else we have to get the last id and return it
-    if (lseek(huntFd, -((long)sizeof(TreasureData)), SEEK_END) == -1) {//We need to move the cursor to offset - size of treasureData structre based on end of file cursor position
-        perror("Error when trying to get last id");
-        exit(1);
-    }
+    seekCursor(huntFd, -((long)sizeof(TreasureData)), SEEK_END);
+    //We need to move the cursor to offset - size of treasureData structre based on end of file cursor position
+
 
     size_t treasureId = 0;
-    if (read(huntFd, &treasureId, sizeof(treasureId)) == -1) {
-        perror("Error when reading treasure id");
-        exit(1);
-    }
+
+    readFile(huntFd, &treasureId, sizeof(treasureId));
 
     return treasureId;
 }
@@ -73,8 +60,7 @@ char *getHuntPathById(const char *huntId, char *huntPath) {
 }
 
 static int existsHunt(const char *huntPath) {
-    struct stat st;
-    return stat(huntPath, &st) != -1; //Folder exists if result different then -1
+    return existsDirectory(huntPath);
 }
 
 static int openHuntTreasureStorage(const char *huntId, FileOperationSpecifier operation) {
@@ -83,43 +69,33 @@ static int openHuntTreasureStorage(const char *huntId, FileOperationSpecifier op
 
     if (!existsHunt(huntPath)) {
         //If the hunt directory doesn't exist we need to create it
-        if (mkdir(huntPath, 0777) == -1) {
-            perror("Impossible to create hunt folder");
-            exit(1);
-        }
+        createDirectory(huntPath);
     }
 
-    char treasurePath[100] = {0};
+    char treasurePath[1024] = {0};
 
     strcpy(treasurePath, huntPath);
     strcat(treasurePath, "/");
     strcat(treasurePath, baseTreasureListStorage);
+
     int huntFd = 0;
 
     switch (operation) {
         case(ADD_TREASURE) :
-            huntFd = open(treasurePath, O_CREAT | O_APPEND | O_RDWR, S_IWUSR | S_IRUSR | S_IROTH);
+            huntFd = openFile(treasurePath, "ra");
             break;
         case(REMOVE_TREASURE) :
-            huntFd = open(treasurePath, O_CREAT | O_RDWR, S_IWUSR | S_IRUSR | S_IROTH);
+            huntFd = openFile(treasurePath, "rw");
             break;
         default :
             break;
-    }
-
-    if (huntFd < 0) {
-        perror("Impossible to open file for the treaure storage");
-        exit(1);
     }
 
     return huntFd;
 }
 
 static void writeFieldToFile(const int huntFd, const void *treasureField, const size_t treasureFieldSize) { //Made adiacent function for writing to fiel for not using redundant code
-    if (write(huntFd, treasureField, treasureFieldSize) == -1) {
-        perror("Imposible to write to file");
-        exit(-1);
-    }
+    writeFile(huntFd, treasureField, treasureFieldSize);
 }
 
 static void writeTreasureToFile(const int huntFd, const TreasureData treasure) {//Need to write to file each field to have padding if needed between fields so that we can use fseek
@@ -159,10 +135,7 @@ void addTreasure(const char * huntId, TreasureData treasure) {
 
     logAddOperation(huntId, treasure);
 
-    if (close(huntFd) == -1) {
-        perror("Impossible to close file");
-        exit(1);
-    }
+    closeFile(huntFd);
 }
 
 TreasureData askUserForInput(void) {
@@ -195,15 +168,10 @@ static ssize_t findTreasurePosition(const int huntFd, const size_t treasureId, s
 
     ssize_t middle = left + (right - left) / 2;
 
-    if (lseek(huntFd, middle * sizeof(TreasureData), SEEK_SET) == -1) {//Go to position of middle and multiply it by the size of our treasure data structure to go to the beggining of the line
-        perror("Impossible to seek to treasure position");
-        exit(1);
-    }
+    //Go to position of middle and multiply it by the size of our treasure data structure to go to the beggining of the line
+    seekCursor(huntFd, middle * sizeof(TreasureData), SEEK_SET);
 
-    if (read(huntFd, &(treasureIdFromStorage), sizeof(treasureIdFromStorage)) == -1) {
-        perror("Impossible to read from file");
-        exit(1);
-    }
+    readFile(huntFd, &(treasureIdFromStorage), sizeof(treasureIdFromStorage));
 
     if (treasureIdFromStorage == treasureId) {
         return middle;
@@ -222,10 +190,8 @@ static ssize_t findTreasurePosition(const int huntFd, const size_t treasureId, s
 
 static TreasureData readTreasureFromFile(const int huntFd) {
     TreasureData treasure;
-    if (read(huntFd, &(treasure), sizeof(treasure)) == -1) {//We can read it as a whole becouse we already padded each field with 0 where needed
-        perror("Impossible to read from file");
-        exit(1);
-    }
+    //We can read it as a whole becouse we already padded each field with 0 where needed
+    readFile(huntFd, &(treasure), sizeof(treasure));
     return treasure;
 }
 
@@ -240,10 +206,7 @@ static TreasureData getTreasureFromStorageById(const int huntFd, const ssize_t t
         return (TreasureData){0}; //We return a nulll treasure
     }
 
-    if (lseek(huntFd, pos * sizeof(TreasureData), SEEK_SET) == -1) {
-        perror("Impossible to seek to treasure position");
-        exit(1);
-    }
+    seekCursor(huntFd, pos * sizeof(TreasureData), SEEK_SET);
 
     treasure = readTreasureFromFile(huntFd);
 
@@ -282,10 +245,7 @@ TreasureData getTreasureFromHunt(const char * huntId, const char * treasureId) {
 
     logGetTreasureOperation(huntId, treasure);
 
-    if (close(huntFd) == -1) { //Close the file descriptor
-        perror("Impossible to close file");
-        exit(1);
-    }
+    closeFile(huntFd);
 
     viewTreasure(treasure);
 
@@ -301,17 +261,7 @@ void listTreasuresFromHunt(const char * huntId) {
         viewTreasure(treasure);
     }
 
-    if (close(huntFd) == -1) { //Close the file descriptor
-        perror("Impossible to close file");
-        exit(1);
-    }
-}
-
-void removeEntireHunt(const char * huntId) {
-    char huntPath[100] = {0};
-    getHuntPathById(huntId, huntPath);//Get the hunt path that we will remove
-
-    rmdir(huntPath);
+    closeFile(huntFd);
 }
 
 static void logRemoveTreasureOperation(const char * huntId, const char * treasureId) {
@@ -348,42 +298,26 @@ void removeTreasureFromHunt(const char * huntId, const char *treasureId) {
         //As the buffer we can use the TreasureData type too but we do this for generalization ,and better understanding that we get bytes from the file
         for (;treasurePosition < getLineCountOfStorage(huntFd) - 1;treasurePosition++) {
 
-            if (lseek(huntFd, (treasurePosition + 1) * sizeof(TreasureData), SEEK_SET) == -1) { //We move the pointer to the next record
-                perror("Impossible to seek to treasure position");
-                exit(-1);
-            }
+            //We move the pointer to the next record
+            seekCursor(huntFd, (treasurePosition + 1) * sizeof(TreasureData), SEEK_SET);
 
-            if (read(huntFd, readBuffer, sizeof(TreasureData)) == -1) {//Read the data to buffer
-                perror("impossible to read from file");
-                exit(-1);
-            }
+            //Read the data to buffer
+            readFile(huntFd, readBuffer, sizeof(TreasureData));
 
             //After reading we have to move the cursor to the point where we want to insert the buffer
-            if (lseek(huntFd, treasurePosition * sizeof(TreasureData), SEEK_SET) == -1) {
-                perror("Impossible to seek to treasure position");
-                exit(-1);
-            }
+            seekCursor(huntFd, treasurePosition * sizeof(TreasureData), SEEK_SET);
 
-            if (write(huntFd, readBuffer, sizeof(TreasureData)) == -1) {
-                perror("Impossible to write to file");
-                exit(-1);
-            }
+            writeFile(huntFd, readBuffer, sizeof(TreasureData));
         }
     }
 
-    if (ftruncate(huntFd, (getLineCountOfStorage(huntFd) - 1) * sizeof(TreasureData)) == -1) {
-        perror("Impossible to truncate file");
-        exit(-1);
-    }
+    truncateFile(huntFd, (getLineCountOfStorage(huntFd) - 1) * sizeof(TreasureData));
 
     logRemoveTreasureOperation(huntId, treasureId);
 
     listTreasuresFromHunt(huntId);//After that we show it to see changes
 
-    if (close(huntFd) == -1) {
-        perror("Impossible to close file");
-        exit(-1);
-    }
+    closeFile(huntFd);
 }
 
 void removeHunt(const char *huntId) {
