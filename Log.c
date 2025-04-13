@@ -5,8 +5,20 @@
 #include <string.h>
 #include "FileLib.h"
 #include <unistd.h>
+#include <time.h>
 
 static void log(const int fd, const char * message) {
+    time_t t = NULL;
+
+    time(&t);//Adding the time in the variable
+
+    char *logTime = ctime(&t);//Get the time in readable format
+    if (logTime != NULL) {//Log the time if it's succesfull
+        writeFile(fd, logTime, strlen(logTime) - 1); //Logging time
+
+        writeFile(fd, " : ", 3);
+    }
+
     writeFile(fd, message, strlen(message));
 
     writeFile(fd, "\n", 1);
@@ -58,7 +70,7 @@ static int openLogFile(const char *path) {
 void logInfo(const char *message, const char *path){
     const int fd = openLogFile(path);
 
-    write(fd, "[INFO LOG] : ", 13);
+    write(fd, "[INFO LOG] ", 11);
 
     log(fd, message);
 
@@ -68,7 +80,7 @@ void logInfo(const char *message, const char *path){
 void logError(const char *message, const char *path) {
     const int fd = openLogFile(path);
 
-    write(fd, "[ERROR LOG] : ", 14);
+    write(fd, "[ERROR LOG] ", 12);
 
     log(fd, message);
 
@@ -78,7 +90,7 @@ void logError(const char *message, const char *path) {
 void logWarning(const char *message, const char *path) {
     const int fd = openLogFile(path);
 
-    write(fd, "[WARNING LOG] : ", 16);
+    write(fd, "[WARNING LOG] ", 14);
 
     log(fd, message);
 
@@ -88,7 +100,7 @@ void logWarning(const char *message, const char *path) {
 void logSuccess(const char *message, const char *path) {
     const int fd = openLogFile(path);
 
-    write(fd, "[SUCCESS LOG] : ", 16); //Add the color green for specific log type
+    write(fd, "[SUCCESS LOG] ", 14); //Add the color green for specific log type
 
     log(fd, message);
 
