@@ -16,7 +16,7 @@ void removeDirectory(const char *directoryName) {
 
     if (directory == NULL) {
         perror("Error in oppening directory");
-        exit(-3);
+        exit(2);
     }
 
     //Now we need to loop throught it's kids, and if one kid is directory we need to call the function recursively for it
@@ -41,7 +41,7 @@ void removeDirectory(const char *directoryName) {
 
         if (stat(path, &st) == -1) { //We use stat method to see the type of the file becouse the dirent struct can;t be for sure on each system
             perror("Error in stat");
-            exit(1);
+            exit(2);
         }
 
         if (S_ISDIR(st.st_mode)) {
@@ -61,7 +61,7 @@ void removeDirectory(const char *directoryName) {
     closedir(directory);
     if (rmdir(directoryName) == -1) {
         perror("Error in removing directory");
-        exit(3);
+        exit(2);
     }
     //After removing the directory content we remove it too
 }
@@ -74,6 +74,6 @@ int existsDirectory(const char *directoryName) {
 void createDirectory(const char *directoryName) {
     if (mkdir(directoryName, 0777) == -1) {
         perror("Error in making new directory");
-        exit(1);
+        exit(2);
     }
 }

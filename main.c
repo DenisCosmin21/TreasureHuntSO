@@ -74,8 +74,5 @@ int main(const int argc, const char * argv[]) {
 
     parseOperation(argv[1], argv + 2, argc);
 
-
-
-
     return 0;
 }

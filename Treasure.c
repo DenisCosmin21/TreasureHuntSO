@@ -9,6 +9,11 @@
 #include "Log.h"
 #include "DirectoryLib.h"
 #include "FileLib.h"
+#include <ctype.h>
+
+char huntPath[100] = {0}; //Store the huntPath globally for easier access to it, and for removing redundant code
+
+char logPath[100] = {0};
 
 static size_t getLineCountOfStorage(const int huntFd) {//Returns the line number from the storage
 
@@ -55,11 +60,18 @@ static size_t getLastIdFromHunt(const int huntFd) {
     return treasureId;
 }
 
-char *getHuntPathById(const char *huntId, char *huntPath) {
+char *getHuntPathById(const char *huntId) {
     //Hunt is of the form baseHuntName#huntId
     strcpy(huntPath, baseHuntName);
     strcat(huntPath, "#");
     strcat(huntPath, huntId);
+    //At the same time compute the logPath too for further usage
+
+    strcpy(logPath, huntPath);
+    strcat(logPath, "/");
+    strcat(logPath, baseName);
+    strcat(logPath, "-");
+    strcat(logPath, huntId);
 
     return huntPath;
 }
@@ -69,8 +81,7 @@ static int existsHunt(const char *huntPath) {
 }
 
 static int openHuntTreasureStorage(const char *huntId, FileOperationSpecifier operation) {
-    char huntPath[100] = {0};
-    getHuntPathById(huntId, huntPath);
+    getHuntPathById(huntId);
 
     if (!existsHunt(huntPath)) {
         //If the hunt directory doesn't exist we need to create it
@@ -111,25 +122,6 @@ static void writeTreasureToFile(const int huntFd, const TreasureData treasure) {
     writeFieldToFile(huntFd, &(treasure.value), sizeof(treasure.value));
 }
 
-static void logAddOperation(const char *huntId, const TreasureData treasure) { //Added specific log for add operation
-    char logMessage[1024] = {0};
-
-    //Use a json format for the data to print as becouse of it's global usage
-    sprintf(logMessage, "Treasure with id %lu successfully added to Hunt with id \"%s\".\n %s", treasure.treasureId, huntId, jsonEncodeTreasure(treasure));
-
-    char huntPath[100] = {0};
-    getHuntPathById(huntId, huntPath);
-
-    char logPath[100] = {0};
-    strcpy(logPath, huntPath);
-    strcat(logPath, "/");
-    strcat(logPath, baseName);
-    strcat(logPath, "-");
-    strcat(logPath, huntId);
-
-    logSuccess(logMessage, logPath);
-}
-
 void addTreasure(const char * huntId, TreasureData treasure) {
     int huntFd = openHuntTreasureStorage(huntId, ADD_TREASURE);
 
@@ -137,29 +129,75 @@ void addTreasure(const char * huntId, TreasureData treasure) {
 
     writeTreasureToFile(huntFd, treasure);
 
-    logAddOperation(huntId, treasure);
+    char logMessage[1024] = {0};
+
+    //Use a json format for the data to print as becouse of it's global usage
+    sprintf(logMessage, "Treasure with id %lu successfully added to Hunt with id \"%s\".\n %s", treasure.treasureId, huntId, jsonEncodeTreasure(treasure));
+
+    logSuccess(logMessage, logPath);
 
     closeFile(huntFd);
+}
+
+void readField(void *buffer, const size_t count, const int fieldType) //1 => char, 2 => int 3 => float
+{
+    size_t read = 0;
+    char readBuffer[1024];
+
+    while ((readBuffer[read] = getchar()) != '\n') {
+        switch (fieldType) {
+            case(1) :
+                if (read == count) {
+                    perror("Max cnt exceded");
+                    exit(-1);
+                }
+                break;
+            case(2) :
+                if (!isdigit(readBuffer[read])) {
+                    perror("Number field. No characters. Format : 123");
+                    exit(-1);
+                }
+            break;
+            case(3) :
+                if (!isdigit(readBuffer[read]) && readBuffer[read] != '.') {
+                    perror("Float field. Format : 1.27");
+                    exit(-1);
+                }
+            break;
+            default :
+                break;
+        }
+
+        read++;
+    }
+
+    readBuffer[read] = 0;
+
+    switch (fieldType) {
+        case(1) :
+            memcpy(buffer, readBuffer, count);
+        break;
+        case(2) :
+            *(int *)buffer = strtol(readBuffer, NULL, 10);
+        break;
+        case(3) :
+            *(float *)buffer = strtof(readBuffer, NULL);
+    }
 }
 
 TreasureData askUserForInput(void) {
     TreasureData treasure;
 
     printf("Username : ");
-    fgets(treasure.userName, sizeof(treasure.userName), stdin);
-    treasure.userName[strlen(treasure.userName) - 1] = '\0';
+    readField(treasure.userName, sizeof(treasure.userName), 1);
     printf("Latitude : ");
-    scanf("%f", &(treasure.coordinates.latitude));
+    readField(&(treasure.coordinates.latitude), 0, 3);
     printf("Longitude : ");
-    scanf("%f", &(treasure.coordinates.longitude));
-    getchar();
+    readField(&(treasure.coordinates.longitude), 0, 3);
     printf("ClueText : ");
-    fgets(treasure.clueText, sizeof(treasure.clueText), stdin);
-
-    treasure.clueText[strlen(treasure.clueText) - 1] = '\0';
+    readField(treasure.clueText, sizeof(treasure.clueText), 1);
     printf("Value : ");
-    scanf("%d", &(treasure.value));
-    getchar();
+    readField(&(treasure.value), 0, 2);
     return treasure;
 }
 
@@ -217,35 +255,32 @@ static TreasureData getTreasureFromStorageById(const int huntFd, const ssize_t t
     return treasure;
 }
 
-static void logGetTreasureOperation(const char * huntId, const TreasureData treasure) {
-    char logMessage[1024] = {0};
-    //Use a json format for the data to print as becouse of it's global usage
-    sprintf(logMessage, "Get treasure operation return data : \n%s", jsonEncodeTreasure(treasure));
-
-    char huntPath[100] = {0};
-    getHuntPathById(huntId, huntPath);
-
-    char logPath[100] = {0};
-    strcpy(logPath, huntPath);
-    strcat(logPath, "/");
-    strcat(logPath, baseName);
-    strcat(logPath, "-");
-    strcat(logPath, huntId);
-
-    logInfo(logMessage, logPath);
-}
-
 TreasureData getTreasureFromHunt(const char * huntId, const char * treasureId) {
+
+    char logMessage[1024] = {0};
+
+    if (!existsHunt(getHuntPathById(huntId))) {
+        //First check if the hunt exists
+        sprintf(logMessage, "No hunt with id : %s found", huntId);
+        logError(logMessage, logPath);
+        exit(-1);
+    }
+
     const int huntFd = openHuntTreasureStorage(huntId, ADD_TREASURE);
 
     TreasureData treasure = getTreasureFromStorageById(huntFd, strtol(treasureId, NULL, 10));
 
     if (treasure.treasureId == 0) {
         fprintf(stderr, "No treasure with specified id found.");
+        sprintf(logMessage, "Treasure with id : %ld not found", treasure.treasureId);
+        logError(logMessage, logPath);
         exit(-1);
     }
 
-    logGetTreasureOperation(huntId, treasure);
+    //Use a json format for the data to print as becouse of it's global usage
+    sprintf(logMessage, "Get treasure operation return data : \n%s", jsonEncodeTreasure(treasure));
+
+    logSuccess(logMessage, logPath);
 
     closeFile(huntFd);
 
@@ -255,6 +290,17 @@ TreasureData getTreasureFromHunt(const char * huntId, const char * treasureId) {
 }
 
 void listTreasuresFromHunt(const char * huntId) {
+    char logMessage[1024] = {0};
+
+    if (!existsHunt(getHuntPathById(huntId))) {
+        //First check if the hunt exists
+        sprintf(logMessage, "No hunt with id : %s found", huntId);
+        logError(logMessage, NULL);
+        perror("Hunt not found");
+        
+        exit(-1);
+    }
+
     const int huntFd = openHuntTreasureStorage(huntId, ADD_TREASURE);
 
     printf("Hunt name : %s\n", huntId);
@@ -272,29 +318,26 @@ void listTreasuresFromHunt(const char * huntId) {
     closeFile(huntFd);
 }
 
-static void logRemoveTreasureOperation(const char * huntId, const char * treasureId) {
+void removeTreasureFromHunt(const char * huntId, const char *treasureId) {
+
     char logMessage[1024] = {0};
 
-    sprintf(logMessage, "Removing treasure with id %s from hunt %s", treasureId, huntId);
-    char huntPath[100] = {0};
-    getHuntPathById(huntId, huntPath);
+    if (!existsHunt(getHuntPathById(huntId))) {
+        //First check if the hunt exists
+        sprintf(logMessage, "No hunt with id : %s found", huntId);
+        logError(logMessage, NULL);
+        perror("No hunt with specified id found");
+        exit(-1);
+    }
 
-    char logPath[100] = {0};
-    strcpy(logPath, huntPath);
-    strcat(logPath, "/");
-    strcat(logPath, baseName);
-    strcat(logPath, "-");
-    strcat(logPath, huntId);
-
-    logInfo(logMessage, logPath);
-}
-
-void removeTreasureFromHunt(const char * huntId, const char *treasureId) {
     const int huntFd = openHuntTreasureStorage(huntId, REMOVE_TREASURE);
 
     ssize_t treasurePosition = findTreasurePosition(huntFd, strtol(treasureId, NULL, 10), 0, getLineCountOfStorage(huntFd));
 
     if (treasurePosition == -1){//Check if the specified treasure exists
+        sprintf(logMessage, "Treasure with id : %s not found in hunt : %s", treasureId, huntId);
+        logError(logMessage, logPath);
+
         perror("Impossible to find treasure position");
         exit(-1);
     }
@@ -321,7 +364,9 @@ void removeTreasureFromHunt(const char * huntId, const char *treasureId) {
 
     truncateFile(huntFd, (getLineCountOfStorage(huntFd) - 1) * sizeof(TreasureData));
 
-    logRemoveTreasureOperation(huntId, treasureId);
+    sprintf(logMessage, "Removing treasure with id %s from hunt %s", treasureId, huntId);
+
+    logSuccess(logMessage, logPath);
 
     listTreasuresFromHunt(huntId);//After that we show it to see changes
 
@@ -333,7 +378,7 @@ void removeHunt(const char *huntId) {
     char huntPath[100] = {0};
     char logMessage[1024] = {0};
 
-    getHuntPathById(huntId, huntPath);
+    getHuntPathById(huntId);
 
     if (existsHunt(huntPath)) {//Check if hunt exists first
         removeDirectory(huntPath);
@@ -343,5 +388,6 @@ void removeHunt(const char *huntId) {
     }
 
     sprintf(logMessage, "Hunt with id %s not found.", huntId);
+
     logError(logMessage, NULL);
 }
