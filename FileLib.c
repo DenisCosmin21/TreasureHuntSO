@@ -11,10 +11,12 @@ int openFile(const char *path, const char *mode) { //Mode as characters, r => re
     int openFlags = O_CREAT;
 
     if (strcmp(mode, "r") == 0) openFlags |= O_RDONLY;
-    else if (strcmp(mode, "rw") == 0) openFlags |= O_RDWR;
-    else if (strcmp(mode, "ra") == 0) openFlags |= O_RDWR | O_APPEND;
+    else if (strcmp(mode, "rw") == 0 || strcmp(mode, "wr") == 0) openFlags |= O_RDWR;
+    else if (strcmp(mode, "ra") == 0 || strcmp(mode, "ar") == 0) openFlags |= O_RDWR | O_APPEND;
     else if (strcmp(mode, "w") == 0) openFlags |= O_WRONLY;
     else if (strcmp(mode, "a") == 0) openFlags |= O_APPEND | O_WRONLY;
+    else if (strcmp(mode, "t") == 0) openFlags |= O_TRUNC;
+    else if (strcmp(mode, "wt") == 0 || strcmp(mode, "tw") == 0) openFlags |= O_WRONLY | O_TRUNC;
 
     int fd = open(path, openFlags, S_IWUSR | S_IRUSR | S_IROTH);
 
