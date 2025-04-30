@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.30)
-project(TreasureHunt C)
+project(treasure_manager C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(TreasureHunt main.c
+add_executable(treasure_manager TreasureManager.c
         Log.h
         Log.c
         Treasure.h
@@ -11,4 +11,16 @@ add_executable(TreasureHunt main.c
         DirectoryLib.h
         DirectoryLib.c
         FileLib.h
-        FileLib.c)
+        FileLib.c
+        treasureMonitor.h
+)
+
+add_executable(treasure_hub TreasureHub.c
+        treasureMonitor.c
+        operationHelpers.c
+        operationHelpers.h
+        FileLib.h
+        FileLib.c
+        DirectoryLib.h
+        DirectoryLib.c
+)
