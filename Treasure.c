@@ -103,6 +103,9 @@ static int openHuntTreasureStorage(const char *huntId, FileOperationSpecifier op
         case(REMOVE_TREASURE) :
             huntFd = openFile(treasurePath, "rw");
             break;
+        case(VIEW_TREASURE) :
+            huntFd = openFile(treasurePath, "r");
+            break;
         default :
             break;
     }
@@ -266,7 +269,7 @@ TreasureData getTreasureFromHunt(const char * huntId, const char * treasureId) {
         exit(-1);
     }
 
-    const int huntFd = openHuntTreasureStorage(huntId, ADD_TREASURE);
+    const int huntFd = openHuntTreasureStorage(huntId, VIEW_TREASURE);
 
     TreasureData treasure = getTreasureFromStorageById(huntFd, strtol(treasureId, NULL, 10));
 
@@ -289,6 +292,14 @@ TreasureData getTreasureFromHunt(const char * huntId, const char * treasureId) {
     return treasure;
 }
 
+static void showTreasuresFromHunt(const int huntFd) {
+    for (ssize_t i = 0;i < getLineCountOfStorage(huntFd); i++) {//We go line by line getting each treasure and showing it untill we reach the end of file wich we know by reaching the last line
+        TreasureData treasure = readTreasureFromFile(huntFd);
+
+        viewTreasure(treasure);
+    }
+}
+
 void listTreasuresFromHunt(const char * huntId) {
     char logMessage[1024] = {0};
 
@@ -301,7 +312,7 @@ void listTreasuresFromHunt(const char * huntId) {
         exit(-1);
     }
 
-    const int huntFd = openHuntTreasureStorage(huntId, ADD_TREASURE);
+    const int huntFd = openHuntTreasureStorage(huntId, VIEW_TREASURE;
 
     printf("Hunt name : %s\n", huntId);
 
@@ -309,11 +320,7 @@ void listTreasuresFromHunt(const char * huntId) {
 
     printf("Last modification : %s\n", getFileHumanReadableTime(huntFd));
 
-    for (ssize_t i = 0;i < getLineCountOfStorage(huntFd); i++) {//We go line by line getting each treasure and showing it untill we reach the end of file wich we know by reaching the last line
-        TreasureData treasure = readTreasureFromFile(huntFd);
-
-        viewTreasure(treasure);
-    }
+    showTreasuresFromHunt(huntFd);
 
     closeFile(huntFd);
 }
@@ -390,4 +397,27 @@ void removeHunt(const char *huntId) {
     sprintf(logMessage, "Hunt with id %s not found.", huntId);
 
     logError(logMessage, NULL);
+}
+
+void listHunts(void) {
+    //First we need to get all files and directories from the main folder
+    DIR *dir = openDirectory(".");
+
+    struct dirent *entry = NULL;
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (strstr(entry->d_name, "huntFolder#") != NULL) {
+            char *huntId = strchr(entry->d_name, '#') + 1;
+
+            printf("%s\n", huntId);
+
+            int huntFd = openHuntTreasureStorage(huntId, VIEW_TREASURE);
+
+            printf("%ld\n", getLineCountOfStorage(huntFd));
+
+            showTreasuresFromHunt(huntFd);
+
+            closeFile(huntFd);
+        }
+    }
 }
