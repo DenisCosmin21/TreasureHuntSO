@@ -8,13 +8,13 @@
 
 int main(void) {
     initTreasureHubProcess();
-    promptForCommand();
-    while (1);
-}
 
-/*char **arguments = splitArguments(operation);
-        printf("%s\n", arguments[0]);
-        if (arguments != NULL) {
-            //Then parse operation else wait for further instructions
-            parseOperation(arguments[1], arguments + 2, strtol(arguments[0], NULL, 10));
-        }*/
+    while (1) {//Main process loop
+        while (!monitorStarted && monitorPid == 0) {
+            //While the monitor is not started show the prompt
+            promptForCommand(0);
+        }
+    }
+
+    return 0;
+}

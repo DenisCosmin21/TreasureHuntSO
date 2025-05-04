@@ -4,9 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
+#include "treasureMonitor.h"
 #include "FileLib.h"
 #include "DirectoryLib.h"
+#include "Treasure.h"
 
 static char (*splitArguments(char *operation))[1024] {//Split the arguments to mimic the argv format
     static char arguments[4][1024]; //The operations that we should be able to parse have at most 3 parameters. First one will be the argCount so that we know without going over it again
@@ -33,21 +34,22 @@ static char (*splitArguments(char *operation))[1024] {//Split the arguments to m
 
 static void parseOperation(const char * operation, const char (*parameters)[1024], const size_t parametersCount) {
     if (strcmp(operation, "stop_monitor") == 0) {
-        printf("Stopping monitor");
+        stopMonitor();
+        return;
     }
     else if (strcmp(operation, "list_hunts") == 0) {
-        printf("Listing hunts");
+        listHunts();
     }
     else if (strcmp(operation, "list_treasures") == 0) {
-        printf("Listing treasures");
+        listTreasure(parameters[0]);
     }
     else if (strcmp(operation, "view_treasure") == 0) {
-        printf("Viewing treasure");
+        viewTreasure(parameters[0], parameters[1]);
     }
     else {
-        fprintf(stderr, "Unknown operation: %s\nUsage : \nstart_monitor\nlist_hunts\nlist_treasure <hunt_id>\nview_treasure <hunt_id> <treasure_id>\nstop_monitor\nexit\n", operation);
+         printf("\033[31mUnknown operation: %s\nUsage : \nstart_monitor\nlist_hunts\nlist_treasure <hunt_id>\nview_treasure <hunt_id> <treasure_id>\nstop_monitor\nexit\n\033[0m", operation);
+        fflush(stdout);
     }
-    fflush(stderr);
     notifyProcess(getppid(), SIGUSR2); //Notify the parrent that we finished parsing this, so we can continue
 }
 
@@ -72,7 +74,7 @@ void notifyProcess(const int processPid, const int signal) {
     }
 }
 
-void readOperationInfoFromFile(void) {
+void readOperationInfoFromFile(int sig) {
     //If the signal SIGUSR1 is recieved we are sure that the monitor process is running
     int fd = openFile("insides/operations.in", "r");
     char operationBuffer[1024] = {0};

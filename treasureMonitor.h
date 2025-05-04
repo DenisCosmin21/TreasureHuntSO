@@ -4,8 +4,8 @@
 
 #ifndef TREASUREMONITOR_H
 #define TREASUREMONITOR_H
-#include <stddef.h>
 
+extern int monitorStarted;
 extern int monitorPid;
 
 void startMonitor(void);
@@ -14,11 +14,15 @@ void stopMonitor(void);
 
 void exitHub(void);
 
-void viewTreasure(char *huntId, char *treasureId);
+void viewTreasure(const char *huntId,const char *treasureId);
+
+void listTreasure(const char *huntId);
+
+void listHunts(void);
 
 void executeOperation(const char *operation);
 
-void promptForCommand(void);
+void promptForCommand(int sig);
 
 void initTreasureHubProcess(void);
 #endif //TREASUREMONITOR_H
