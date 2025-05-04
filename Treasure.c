@@ -339,7 +339,7 @@ void removeTreasureFromHunt(const char * huntId, const char *treasureId) {
 
     const int huntFd = openHuntTreasureStorage(huntId, REMOVE_TREASURE);
 
-    ssize_t treasurePosition = findTreasurePosition(huntFd, strtol(treasureId, NULL, 10), 0, getLineCountOfStorage(huntFd));
+    ssize_t treasurePosition = findTreasurePosition(huntFd, strtol(treasureId, NULL, 10), 0, getLineCountOfStorage(huntFd));ULL
 
     if (treasurePosition == -1){//Check if the specified treasure exists
         sprintf(logMessage, "Treasure with id : %s not found in hunt : %s", treasureId, huntId);
@@ -405,6 +405,8 @@ void listHunts(void) {
 
     struct dirent *entry = NULL;
 
+    logSuccess("Listing all hunts", NULL);
+
     while ((entry = readdir(dir)) != NULL) {
         if (strstr(entry->d_name, "huntFolder#") != NULL) {
             char *huntId = strchr(entry->d_name, '#') + 1;
@@ -412,6 +414,12 @@ void listHunts(void) {
             int huntFd = openHuntTreasureStorage(huntId, VIEW_TREASURE);
 
             printf("%ld treasures in hunt %s\n", getLineCountOfStorage(huntFd), huntId);
+
+            char logMessage[1024] = {0};
+
+            sprintf(logMessage, "Listing treasures from hunt %s", huntId);
+
+            logSuccess(logMessage, logPath);
 
             showTreasuresFromHunt(huntFd);
 
