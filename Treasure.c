@@ -312,7 +312,7 @@ void listTreasuresFromHunt(const char * huntId) {
         exit(-1);
     }
 
-    const int huntFd = openHuntTreasureStorage(huntId, VIEW_TREASURE;
+    const int huntFd = openHuntTreasureStorage(huntId, VIEW_TREASURE);
 
     printf("Hunt name : %s\n", huntId);
 
@@ -409,11 +409,9 @@ void listHunts(void) {
         if (strstr(entry->d_name, "huntFolder#") != NULL) {
             char *huntId = strchr(entry->d_name, '#') + 1;
 
-            printf("%s\n", huntId);
-
             int huntFd = openHuntTreasureStorage(huntId, VIEW_TREASURE);
 
-            printf("%ld\n", getLineCountOfStorage(huntFd));
+            printf("%ld treasures in hunt %s\n", getLineCountOfStorage(huntFd), huntId);
 
             showTreasuresFromHunt(huntFd);
 

@@ -57,6 +57,15 @@ void parseOperation(const char * operation, const char **parameters, const size_
 
         removeHunt(parameters[0]);
     }
+    else if (strcmp(operation, "--list_hunts") == 0) {
+        if (parametersCount != 2) {
+            fprintf(stderr, "Wrong number of arguments\n");
+            printf("Usage : list_hunts\n");
+            exit(-1);
+        }
+
+        listHunts();
+    }
     else {
         fprintf(stderr, "Invalid operation\n");
         printf("Usage : \nadd <hunt_id>\nlist <hunt_id>\nview <hunt_id> <id>\nremove_treasure <hunt_id> <id>\nremove_hunt <hunt_id>");
