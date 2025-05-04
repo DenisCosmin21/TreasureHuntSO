@@ -1,3 +1,5 @@
+#include "DirectoryLib.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -5,19 +7,13 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include "Treasure.h"
 
 void removeDirectory(const char *directoryName) {
     //First we have to open the directory to get it's content
     //If we ewnt to delete a directory we hav to delete recursively it's content too before doing so
     //We will have a pots order tree traversal becouse of the directory generalized tree structure
     //For our case we need to emove only main file's content, but will generalize it for further addings
-    DIR *directory = opendir(directoryName);
-
-    if (directory == NULL) {
-        perror("Error in oppening directory");
-        exit(2);
-    }
+    DIR *directory = openDirectory(directoryName);
 
     //Now we need to loop throught it's kids, and if one kid is directory we need to call the function recursively for it
     struct dirent *entry = NULL;
@@ -77,3 +73,14 @@ void createDirectory(const char *directoryName) {
         exit(2);
     }
 }
+
+DIR *openDirectory(const char *directoryName) {
+    DIR *dir = opendir(directoryName);
+    if (dir == NULL) {
+        perror("Error in opening directory");
+        exit(2);
+    }
+    return dir;
+}
+
+
