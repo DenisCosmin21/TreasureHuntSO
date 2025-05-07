@@ -1,23 +1,27 @@
 CC = gcc
-
 CFLAGS = -g -Wall -O3
 
-TARGET = treasure_manager
+# Targets
+TARGETS = treasure_manager.x treasure_hub.x
 
-all : ${TARGET}
+all: $(TARGETS)
 
-$(TARGET):
-	$(CC) $(CFLAGS) -c DirectoryLib.c
-	$(CC) $(CFLAGS) -c FileLib.c
-	$(CC) $(CFLAGS) -c Log.c
-	$(CC) $(CFLAGS) -c Treasure.c
-	$(CC) $(CFLAGS) -c main.c
-	$(CC) $(CFLAGS) -o $(TARGET).x DirectoryLib.o FileLib.o Log.o Treasure.o main.o
+# Object files for treasure_manager
+TREASURE_MANAGER_OBJS = DirectoryLib.o FileLib.o Log.o Treasure.o TreasureManager.o
 
+treasure_manager.x: $(TREASURE_MANAGER_OBJS)
+	$(CC) $(CFLAGS) -o $@ $^
+
+# Object files for treasure_hub
+TREASURE_HUB_OBJS = DirectoryLib.o FileLib.o treasureMonitor.o operationHelpers.o TreasureHub.o
+
+treasure_hub.x: $(TREASURE_HUB_OBJS)
+	$(CC) $(CFLAGS) -o $@ $^
+
+# Compile source files into object files
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Clean target
 clean:
-	$(RM) $(TARGET).x
-	$(RM) DirectoryLib.o
-	$(RM) FileLib.o
-	$(RM) Log.o
-	$(RM) Treasure.o
-	$(RM) main.o
+	$(RM) *.o *.x

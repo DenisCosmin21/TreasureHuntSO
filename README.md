@@ -7,6 +7,9 @@ When you have make installed
 ```bash
 make
 ```
+
+<h1>Treasure manager</h1>
+
 Inside the folder and afterwards
 ```bash
 ./treasure_manager <command> <parrams>
@@ -42,3 +45,39 @@ Exit codes :
 File problem : exit code 1
 Directory problem : exit code 2
 User input problem : exit code -1 (bad ids, bad data format for fields, bad command, etc...)
+
+<h1>Treasure hub</h1>
+
+Inside the folder and afterwards run the hub
+```bash
+./treasure_hub
+```
+
+Usage : 
+```bash
+start_monitor
+```
+to start monitor when hub opened and monitor not opened yet
+```bash
+list_hunts
+```
+to list all hunts when monitor started
+```bash
+list_treasures huntId
+```
+to list all treasure from hunt with id huntId
+```bash
+view_treasure huntId treasureId
+```
+to list the treasure with id treasureId from hunt with id huntId
+```bash
+stop_monitor
+```
+to stop the monitor if it is started
+```bash
+exit
+```
+to exit the hub when the monitor is closed. If it is opened it will give a error message
+
+Exit codes : 
+Any problem with signals : exit code 3

@@ -41,7 +41,6 @@ void closeMonitorAction(int sig) {
             perror("Erorr when waiting for moitor killer to close");
             exit(3);
         }//Did wait to remove the process from zombie state
-        int c;
         printf("\nMonitor closed\n");
 
         monitorPid = 0; //Reset the monitor pid so that we know that we don;t have the monitor process on
@@ -100,7 +99,7 @@ void promptForCommand(int sig) {
 }
 
 void killMonitor(int sig) {
-    sleep(5);
+    sleep(5); //testing the monitor kill long duration
     notifyProcess(monitorPid, SIGTERM);
     exit(0);
 }
@@ -205,7 +204,7 @@ static int startTreasureManager(void) {
 void viewTreasure(const char *huntId,const char *treasureId) {
     int treasureManagerPid = startTreasureManager();
     if (treasureManagerPid == 0) {
-        if (execl("./cmake-build-debug/treasure_manager", "./treasure_manager", "--view", huntId, treasureId, NULL) < 0) {
+        if (execl("./treasure_manager", "./treasure_manager", "--view", huntId, treasureId, NULL) < 0) {
             perror("Error starting the treausreManager process");
             exit(3);
         }
@@ -220,7 +219,7 @@ void listTreasure(const char *huntId) {
     int treasureManagerPid = startTreasureManager();
 
     if (treasureManagerPid == 0) {
-        if (execl("./cmake-build-debug/treasure_manager", "./treasure_manager", "--list", huntId, NULL) < 0) {
+        if (execl("./treasure_manager", "./treasure_manager", "--list", huntId, NULL) < 0) {
             perror("Error starting the treausreManager process");
             exit(3);
         }

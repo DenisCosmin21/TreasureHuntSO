@@ -339,7 +339,7 @@ void removeTreasureFromHunt(const char * huntId, const char *treasureId) {
 
     const int huntFd = openHuntTreasureStorage(huntId, REMOVE_TREASURE);
 
-    ssize_t treasurePosition = findTreasurePosition(huntFd, strtol(treasureId, NULL, 10), 0, getLineCountOfStorage(huntFd));ULL
+    ssize_t treasurePosition = findTreasurePosition(huntFd, strtol(treasureId, NULL, 10), 0, getLineCountOfStorage(huntFd));
 
     if (treasurePosition == -1){//Check if the specified treasure exists
         sprintf(logMessage, "Treasure with id : %s not found in hunt : %s", treasureId, huntId);
