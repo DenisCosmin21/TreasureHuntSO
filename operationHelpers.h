@@ -1,7 +1,7 @@
 #ifndef OPERATIONHELPERS_H
 #define OPERATIONHELPERS_H
 
-void readOperationInfoFromFile(int sig);
+char (*readOperationInfoFromFile(void))[1024];
 
 void writeOperationInfoInFile(const char *operation);
 

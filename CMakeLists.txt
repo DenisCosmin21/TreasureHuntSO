@@ -12,15 +12,27 @@ add_executable(treasure_manager TreasureManager.c
         DirectoryLib.c
         FileLib.h
         FileLib.c
-        treasureMonitor.h
+        HubHelpers.c
 )
 
 add_executable(treasure_hub TreasureHub.c
-        treasureMonitor.c
         operationHelpers.c
         operationHelpers.h
         FileLib.h
         FileLib.c
         DirectoryLib.h
         DirectoryLib.c
+        HubHelpers.h
+        HubHelpers.c
+)
+
+add_executable(monitor treasureMonitor.c
+        operationHelpers.c
+        operationHelpers.h
+        DirectoryLib.c
+        DirectoryLib.h
+        FileLib.c
+        FileLib.h
+        MonitorHelpers.h
+        MonitorHelpers.c
 )
