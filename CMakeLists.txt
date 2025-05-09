@@ -12,7 +12,6 @@ add_executable(treasure_manager TreasureManager.c
         DirectoryLib.c
         FileLib.h
         FileLib.c
-        HubHelpers.c
 )
 
 add_executable(treasure_hub TreasureHub.c
