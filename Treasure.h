@@ -42,4 +42,14 @@ char *getHuntPathById(const char *huntId);
 void removeHunt(const char *huntId);
 
 void listHunts(void);
+
+int existsHunt(const char *huntPath);
+
+size_t getLineCountOfStorage(const int huntFd);
+
+int openHuntTreasureStorage(const char *huntId, FileOperationSpecifier operation);
+
+TreasureData readTreasureFromFile(const int huntFd);
+
+char *getHuntIdByPath(char *path);
 #endif //TREASURE_H

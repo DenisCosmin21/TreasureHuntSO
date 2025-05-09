@@ -15,7 +15,7 @@ char huntPath[100] = {0}; //Store the huntPath globally for easier access to it,
 
 char logPath[100] = {0};
 
-static size_t getLineCountOfStorage(const int huntFd) {//Returns the line number from the storage
+size_t getLineCountOfStorage(const int huntFd) {//Returns the line number from the storage
 
     return getFileSize(huntFd) / sizeof(TreasureData); //Only fixed size will be in the file, not any chance of having float data
 }
@@ -32,6 +32,14 @@ static void viewTreasure(const TreasureData treasureToView) {
     printTreasureCoordinates(treasureToView.coordinates);
     printf("clueText : %s\n", treasureToView.clueText);
     printf("value : %d\n", treasureToView.value);
+}
+
+char *getHuntIdByPath(char *path) {
+    if (strstr(path, "huntFolder#") != NULL) {
+        char *huntId = strchr(path, '#') + 1;
+        return huntId;
+    }
+    return NULL;
 }
 
 static char *jsonEncodeTreasure(const TreasureData treasure) {
@@ -76,11 +84,11 @@ char *getHuntPathById(const char *huntId) {
     return huntPath;
 }
 
-static int existsHunt(const char *huntPath) {
+int existsHunt(const char *huntPath) {
     return existsDirectory(huntPath);
 }
 
-static int openHuntTreasureStorage(const char *huntId, FileOperationSpecifier operation) {
+int openHuntTreasureStorage(const char *huntId, FileOperationSpecifier operation) {
     getHuntPathById(huntId);
 
     if (!existsHunt(huntPath)) {
@@ -233,7 +241,7 @@ static ssize_t findTreasurePosition(const int huntFd, const size_t treasureId, s
         return -1; //If the id is not inside we return -1 like a error becouse we can't have negative position
 }
 
-static TreasureData readTreasureFromFile(const int huntFd) {
+TreasureData readTreasureFromFile(const int huntFd) {
     TreasureData treasure;
     //We can read it as a whole becouse we already padded each field with 0 where needed
     readFile(huntFd, &(treasure), sizeof(treasure));
@@ -339,7 +347,7 @@ void removeTreasureFromHunt(const char * huntId, const char *treasureId) {
 
     const int huntFd = openHuntTreasureStorage(huntId, REMOVE_TREASURE);
 
-    ssize_t treasurePosition = findTreasurePosition(huntFd, strtol(treasureId, NULL, 10), 0, getLineCountOfStorage(huntFd));ULL
+    ssize_t treasurePosition = findTreasurePosition(huntFd, strtol(treasureId, NULL, 10), 0, getLineCountOfStorage(huntFd));
 
     if (treasurePosition == -1){//Check if the specified treasure exists
         sprintf(logMessage, "Treasure with id : %s not found in hunt : %s", treasureId, huntId);
@@ -408,22 +416,23 @@ void listHunts(void) {
     logSuccess("Listing all hunts", NULL);
 
     while ((entry = readdir(dir)) != NULL) {
-        if (strstr(entry->d_name, "huntFolder#") != NULL) {
-            char *huntId = strchr(entry->d_name, '#') + 1;
+        char *huntId = NULL;
+        if ((huntId = getHuntIdByPath(entry->d_name)) == NULL)
+            continue;
 
-            int huntFd = openHuntTreasureStorage(huntId, VIEW_TREASURE);
+        int huntFd = openHuntTreasureStorage(huntId, VIEW_TREASURE);
 
-            printf("%ld treasures in hunt %s\n", getLineCountOfStorage(huntFd), huntId);
+        printf("%ld treasures in hunt %s\n", getLineCountOfStorage(huntFd), huntId);
 
-            char logMessage[1024] = {0};
+        char logMessage[1024] = {0};
 
-            sprintf(logMessage, "Listing treasures from hunt %s", huntId);
+        sprintf(logMessage, "Listing treasures from hunt %s", huntId);
 
-            logSuccess(logMessage, logPath);
+        logSuccess(logMessage, logPath);
 
-            showTreasuresFromHunt(huntFd);
+        showTreasuresFromHunt(huntFd);
 
-            closeFile(huntFd);
-        }
+        closeFile(huntFd);
     }
+    closeDirectory(dir);
 }
