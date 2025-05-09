@@ -24,3 +24,15 @@ add_executable(treasure_hub TreasureHub.c
         DirectoryLib.h
         DirectoryLib.c
 )
+
+add_executable(calculate_score ScoreCalculator.c
+        ScoreCalculator.c
+        Treasure.c
+        Treasure.h
+        DirectoryLib.h
+        DirectoryLib.c
+        FileLib.h
+        FileLib.c
+        Log.c
+        Log.h
+)
