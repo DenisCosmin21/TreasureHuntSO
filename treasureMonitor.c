@@ -3,8 +3,7 @@
 
 int main(void) {
     initMonitorProcess();
-    while (1) {
-    }
+    while (1);
 
     return 0;
 }
