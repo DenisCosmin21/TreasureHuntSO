@@ -83,6 +83,12 @@ DIR *openDirectory(const char *directoryName) {
     return dir;
 }
 
+void closeDirectory(DIR *dir) {
+    if (closedir(dir) == -1) {
+        perror("Error in closing directory");
+        exit(2);
+    }
+}
 
 
 
