@@ -4,7 +4,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include "DirectoryLib.h"
 #include "operationHelpers.h"
+
+int stop = 0;
 
 static int startTreasureManager(void) {
     int treasureManagerPid = 0;
@@ -13,6 +16,8 @@ static int startTreasureManager(void) {
         perror("Error forking");
         exit(3);
     }
+
+    dup2(STDOUT_FILENO, STDOUT_FILENO);
 
     return treasureManagerPid;
 }
@@ -63,11 +68,36 @@ static void listHunts(void) {
 
 
 static void stopMonitor(void) {
-    notifyProcess(getppid(), SIGUSR1);//Notify the hub process about the ending of the monitor soon
+    notifyProcess(getppid(), SIGUSR1);
 }
 
 static void exitMonitor(int sig) {
+    usleep(3000000);
     exit(0);
+}
+
+static void calculateScores(void) {
+    DIR *directory = openDirectory(".");
+    char *fileName = getEntryName(directory); //mimic strtok usage
+    int pid = 0;
+
+    while (fileName != NULL) {
+
+        if (strstr(fileName, "huntFolder#") != NULL) {
+            pid = fork();
+            int status = 0;
+            if (pid == 0) {
+                execl("./cmake-build-debug/calculate_score", "calculate_score", fileName, NULL);
+            }
+            if (waitpid(pid, &status, 0) < 0) {
+                perror("Error when destroying process");
+                exit(3);
+            }
+        }
+        fileName = getEntryName(NULL);
+    }
+
+    closeDirectory(directory);
 }
 
 static void parseOperation(const char * operation, const char (*parameters)[1024], const size_t parametersCount) {
@@ -84,11 +114,17 @@ static void parseOperation(const char * operation, const char (*parameters)[1024
     else if (strcmp(operation, "view_treasure") == 0) {
         viewTreasure(parameters[0], parameters[1]);
     }
+    else if (strcmp(operation, "calculate_score") == 0) {
+        calculateScores();
+    }
     else {
         printf("\033[31mUnknown operation: %s\nUsage : \nstart_monitor\nlist_hunts\nlist_treasure <hunt_id>\nview_treasure <hunt_id> <treasure_id>\nstop_monitor\nexit\n\033[0m", operation);
         fflush(stdout);
     }
-    notifyProcess(getppid(), SIGUSR2); //Notify the parrent that we finished parsing this, so we can continue
+
+    const char end = 0x04;
+
+    write(STDOUT_FILENO, &end, 1);
 }
 
 static void executeCommand(int sig){

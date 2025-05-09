@@ -152,7 +152,7 @@ int updateEntry(hashTable *table, node newEntry){
 void printUserValues(hashTable *table) {
     for (size_t i = 0; i < MAX_BUCKETS; i++) {
         for (size_t j = 0;j < table->lists[i].currentSize;j++) {
-            printf("%s => %lld\n", table->lists[i].entries[j].data.userName, table->lists[i].entries[j].data.value);
+            printf("%s => %lld\n\0", table->lists[i].entries[j].data.userName, table->lists[i].entries[j].data.value);
         }
     }
 }
@@ -187,7 +187,7 @@ int main(int argc, char *argv[]){
         }
 
         closeFile(huntFd);
-        printTable(table);
+        //printTable(table);
         printUserValues(table);
 
         table = clearHashTable(table);

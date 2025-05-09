@@ -8,4 +8,6 @@ void initTreasureHubProcess(void);
 void startMonitor(void);
 
 void exitHub(void);
+
+void promptForCommand();
 #endif //HUBHELPERS_H
