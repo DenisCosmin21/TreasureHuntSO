@@ -15,4 +15,6 @@ void createDirectory(const char *directoryName);
 DIR *openDirectory(const char *directoryName);
 
 void closeDirectory(DIR *dir);
+
+char *getEntryName(DIR *directory);
 #endif //DIRECTORYLIB_H

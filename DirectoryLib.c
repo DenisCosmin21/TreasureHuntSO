@@ -90,5 +90,22 @@ void closeDirectory(DIR *dir) {
     }
 }
 
+char *getEntryName(DIR *directory) {
+    static DIR *dir = NULL;
+    if (dir == NULL) {
+        dir = directory;
+    }
+    else
+        if (directory != NULL) {
+            dir = directory;
+        }
+
+    struct dirent *entry = NULL;
+    if ((entry = readdir(dir)) != NULL) {
+        return entry->d_name;
+    }
+    return NULL;
+}
+
 
 
