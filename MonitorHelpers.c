@@ -122,9 +122,9 @@ static void parseOperation(const char * operation, const char (*parameters)[1024
         fflush(stdout);
     }
 
-    const char end = 0x04;
+    printf("%c", 0x04);
 
-    write(STDOUT_FILENO, &end, 1);
+    fflush(stdout);
 }
 
 static void executeCommand(int sig){

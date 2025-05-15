@@ -6,7 +6,6 @@
 #include "operationHelpers.h"
 #include <string.h>
 #include <sys/wait.h>
-
 #include "FileLib.h"
 
 int monitorStarted = 0;
@@ -29,21 +28,26 @@ void executeOperation(const char *operation) {
     notifyProcess(monitorPid, SIGUSR1);//notify the process about the new operation
     if (strcmp(operation, "stop_monitor\n") == 0)
         return;
-    char buffer[512]; //512 is the max size of the pipe
+    char buffer[513]; //512 is the max size of the pipe
 
     ssize_t count = 0;
 
     short endRead = 0;
 
     while ((count = readFile(pfd[0], buffer, sizeof(buffer) - 1)) > 0) {
+        buffer[count] = '\0';
+
         if (buffer[count - 1] == 0x04) {
             endRead = 1;
             buffer[count - 1] = '\0';
         }
+
         printf("%s", buffer);
+        fflush(stdout);
         if (endRead)
             break;
     }
+    printf("\n");
 }
 
 void promptForCommand() {
