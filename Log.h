@@ -1,7 +1,6 @@
 //
 // Created by debian on 4/3/25.
 //
-
 #ifndef LOG_H
 #define LOG_H
 #define baseName "logged_hunt"

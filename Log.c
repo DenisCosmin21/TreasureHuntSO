@@ -1,5 +1,4 @@
 #include "Log.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,8 +6,8 @@
 #include <unistd.h>
 #include <time.h>
 
-static void log(const int fd, const char * message) {
-    time_t t = NULL;
+static void logMessage(const int fd, const char * message) {
+    time_t t = 0;
 
     time(&t);//Adding the time in the variable
 
@@ -72,7 +71,7 @@ void logInfo(const char *message, const char *path){
 
     write(fd, "[INFO LOG] ", 11);
 
-    log(fd, message);
+    logMessage(fd, message);
 
     closeFile(fd);
 }
@@ -82,7 +81,7 @@ void logError(const char *message, const char *path) {
 
     write(fd, "[ERROR LOG] ", 12);
 
-    log(fd, message);
+    logMessage(fd, message);
 
     closeFile(fd);
 }
@@ -92,7 +91,7 @@ void logWarning(const char *message, const char *path) {
 
     write(fd, "[WARNING LOG] ", 14);
 
-    log(fd, message);
+    logMessage(fd, message);
 
     closeFile(fd);
 }
@@ -102,7 +101,7 @@ void logSuccess(const char *message, const char *path) {
 
     write(fd, "[SUCCESS LOG] ", 14); //Add the color green for specific log type
 
-    log(fd, message);
+    logMessage(fd, message);
 
     closeFile(fd);
 }
