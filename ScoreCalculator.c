@@ -3,7 +3,13 @@
 #include <string.h>
 #include "FileLib.h"
 #include "Treasure.h"
+#include "AvlTree.h"
 #define MAX_BUCKETS 10
+
+typedef struct {
+    avlTree entries[MAX_BUCKETS];
+}hashTable;
+
 //Becouse of the complexity of the data, and the need of fast computing of info we will use
 //A hash table type of algorithm. We will generate a key for each string, and afterwards a key for the string key, becouse we don't want to
 //fill too much memory
@@ -14,43 +20,10 @@
 ...etc
  */
 
-typedef struct {
-    char userName[20];
-    size_t value;
-}node;
-
-typedef struct {
-    node data;
-    size_t key;
-}node2;
-
-typedef struct {
-    node2 *entries;
-    size_t maxSize;
-    size_t currentSize;
-}hashNode;
-
-typedef struct {
-    hashNode lists[MAX_BUCKETS];
-}hashTable;
-
-void printNode(node node) {
-    printf("{value : %lld, name : %s}", node.value, node.userName);
-}
-
-void printNode2(node2 node) {
-    printf("{key : %lld => ", node.key);
-    printNode(node.data);
-    printf("}");
-}
-
 void printTable(hashTable *table) {
     for (size_t i = 0; i < MAX_BUCKETS; i++) {
         printf("%lld : ", i);
-        for (size_t j = 0;j < table->lists[i].currentSize;j++) {
-            printNode2(table->lists[i].entries[j]);
-            printf(",");
-        }
+        printTree(table->entries[i]);
         printf("\n");
     }
 }
@@ -58,18 +31,18 @@ void printTable(hashTable *table) {
 hashTable *initHashTable(void) {
     hashTable *table = malloc(sizeof(hashTable));
     for (size_t i = 0; i < MAX_BUCKETS; i++) {
-        table->lists[i].entries = malloc(sizeof(node)); //As default add one entry only
-        table->lists[i].maxSize = 1;
-        table->lists[i].currentSize = 0;
+        table->entries[i] = createTree();
     }
     return  table;
 }
 
 hashTable *clearHashTable(hashTable *table) {
-    for (size_t i = 0; i < MAX_BUCKETS; i++) {
-        free(table->lists[i].entries);
+    if (table != NULL) {
+        for (size_t i = 0; i < MAX_BUCKETS; i++) {
+            table->entries[i] = destructTree(table->entries[i]);
+        }
+        free(table);
     }
-    free(table);
     return NULL;
 }
 
@@ -82,80 +55,59 @@ size_t getKey(char *value) {
     return hash;
 }
 
-size_t getHashPosition(node2 secondLevelEntry) {
-    return secondLevelEntry.key % MAX_BUCKETS;
-}
-
-void checkListMaxSizeExceded(hashTable *table, size_t key) {
-    if (table->lists[key].currentSize >= table->lists[key].maxSize) {
-        //Use a efficent allocation schema to not allocate each element in part for scenarios with huge amounts of data
-        table->lists[key].maxSize = table->lists[key].currentSize > 4 ? table->lists[key].currentSize / 2 * 3 : table->lists[key].currentSize + 1;
-        //If siz greater than 4 we divide current size by 2 then multiply with 3, to have a nice and slow grow up in size, not exponential
-        //focused on both small and large data sizes
-        table->lists[key].entries = realloc(table->lists[key].entries, sizeof(node2) * table->lists[key].maxSize);//Realloc storage if needed
-    }
-}
-
 void addEntry(hashTable *table, node entry) {
     node2 secondLevelNode = {entry, getKey(entry.userName)};
-    size_t hashPosition = getHashPosition(secondLevelNode);
+    size_t listKey = secondLevelNode.key % MAX_BUCKETS;
 
-    checkListMaxSizeExceded(table, hashPosition);
-
-    table->lists[hashPosition].entries[table->lists[hashPosition].currentSize++] = secondLevelNode;
+    table->entries[listKey] = addNode(table->entries[listKey], secondLevelNode);
 }
 
-int existsEntry(hashTable *table, node entry, size_t *listKey, size_t *entryKey) { //Use listKey and entryKey only if you want keys returned too for further usage. If you only need to check it's existence you can put null
-    size_t computedKey = getKey(entry.userName);
+int existsEntry(hashTable *table, node data, size_t *entryKey) { //Use listKey and entryKey only if you want keys returned too for further usage. If you only need to check it's existence you can put null
+    size_t computedKey = getKey(data.userName);
 
-    size_t computedListKey = getHashPosition((node2){entry, computedKey}); //get both keys first
+    size_t tableKey = computedKey % MAX_BUCKETS;
 
-    if (table->lists[computedListKey].currentSize > 0) {
-        //Loop through records to see what we have inside the specified bucket
-        for (size_t i = 0;i < table->lists[computedListKey].currentSize; i++) {
-            if (table->lists[computedListKey].entries[i].key == computedKey && strcmp(table->lists[computedListKey].entries[i].data.userName, entry.userName) == 0) { //Second condition is a safety measure for duplicate keys, wich can happen but really rare
-                if (listKey != NULL) {//Save the keys if needed by the user
-                    *listKey = computedListKey;
-                }
-                if (entryKey != NULL) {
-                    *entryKey = computedKey;
-                }
-                return i;
+    if (table->entries[tableKey] != NULL ) {
+        if (existsNode(table, computedKey) == 1) {
+            if (entryKey != NULL) {
+                *entryKey = computedKey;
             }
+            return 1;
         }
     }
-
-    return -1;
+    return 0;
 }
 
-node getEntry(hashTable *table, size_t listKey, size_t listIndex) {
-    return table->lists[listKey].entries[listIndex].data;
+node *getEntry(hashTable *table, size_t tableKey, size_t key) {
+    return getNode(table->entries[tableKey], key);
 }
 
-int updateEntry(hashTable *table, node newEntry){
-    size_t listKey;
-    int index;
+int updateEntry(hashTable *table, node newData){
+    size_t computedKey = getKey(newData.userName);
+    size_t tableKey = computedKey % MAX_BUCKETS;
 
-    if ((index = existsEntry(table, newEntry, &listKey, NULL)) != -1) {
-        //Record exists so update it
-        node oldValue = getEntry(table, listKey, index);
-        node newValue;
-        newValue.value = oldValue.value + newEntry.value;
-        strcpy(newValue.userName, oldValue.userName);
-        table->lists[listKey].entries[index].data = newValue;
+    node *oldData = getEntry(table, tableKey, computedKey);
+
+    if (oldData != NULL) {//If record exists
+        oldData->value += newData.value;
         return 1;
     }
     //If it doesn't return 0
     return 0;
 }
 
-void printUserValues(hashTable *table) {
-    for (size_t i = 0; i < MAX_BUCKETS; i++) {
-        for (size_t j = 0;j < table->lists[i].currentSize;j++) {
-            printf("%s => %lld\n\0", table->lists[i].entries[j].data.userName, table->lists[i].entries[j].data.value);
-        }
+void showNode(avlTree tree) {
+    if (tree != NULL) {
+        printf("%s => %lld\n", tree->data.data.userName, tree->data.data.value);
     }
 }
+
+void printUserValues(hashTable *table) {
+    for (size_t i = 0; i < MAX_BUCKETS; i++) {
+        preorder(table->entries[i], showNode);
+    }
+}
+
 
 int main(int argc, char *argv[]){
     if (argc != 2) {
