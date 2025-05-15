@@ -9,7 +9,7 @@ int openFile(const char *path, const char *mode);
 
 void closeFile(const int fd);
 
-void readFile(const int fd, void *buffer, size_t len);
+ssize_t readFile(const int fd, void *buffer, size_t len);
 
 void writeFile(const int fd, const void *data, size_t len);
 

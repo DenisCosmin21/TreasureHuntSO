@@ -42,11 +42,15 @@ void writeFile(const int fd, const void *data, const size_t len) {
     }
 }
 
-void readFile(const int fd, void *buffer, const size_t len) {
-    if (read(fd, buffer, len) < 0) {
+ssize_t readFile(const int fd, void *buffer, const size_t len) {
+    ssize_t count = 0;
+
+    if ((count = read(fd, buffer, len)) < 0) {
         perror("Error reading from file");
         exit(1);
     }
+
+    return count;
 }
 
 void makeSymlink(const char *from, const char *to) {
