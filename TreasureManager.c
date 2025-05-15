@@ -1,12 +1,7 @@
 #include <stdio.h>
-#include <errno.h>
 #include <string.h>
-#include <fcntl.h>
 #include <stdlib.h>
-#include <sys/stat.h>
-#include "Log.h"
 #include "Treasure.h"
-#include "DirectoryLib.h"
 
 #define basicPath "treasureHunt"
 
@@ -82,6 +77,6 @@ int main(const int argc, const char * argv[]) {
 
 
     parseOperation(argv[1], argv + 2, argc);
-
+    fflush(stdout);
     return 0;
 }
