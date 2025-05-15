@@ -37,7 +37,6 @@ add_executable(monitor treasureMonitor.c
 )
 
 add_executable(calculate_score ScoreCalculator.c
-        ScoreCalculator.c
         Treasure.c
         Treasure.h
         DirectoryLib.h
@@ -46,4 +45,6 @@ add_executable(calculate_score ScoreCalculator.c
         FileLib.c
         Log.c
         Log.h
+        AvlTree.c
+        AvlTree.h
 )
