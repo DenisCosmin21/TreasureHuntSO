@@ -25,7 +25,7 @@ static int startTreasureManager(void) {
 static void viewTreasure(const char *huntId,const char *treasureId) {
     int treasureManagerPid = startTreasureManager();
     if (treasureManagerPid == 0) {
-        if (execl("./cmake-build-debug/treasure_manager", "./treasure_manager", "--view", huntId, treasureId, NULL) < 0) {
+        if (execl("./treasure_manager", "./treasure_manager", "--view", huntId, treasureId, NULL) < 0) {
             perror("Error starting the treausreManager process");
             exit(3);
         }
@@ -40,7 +40,7 @@ static void listTreasure(const char *huntId) {
     int treasureManagerPid = startTreasureManager();
 
     if (treasureManagerPid == 0) {
-        if (execl("./cmake-build-debug/treasure_manager", "./treasure_manager", "--list", huntId, NULL) < 0) {
+        if (execl("./treasure_manager", "./treasure_manager", "--list", huntId, NULL) < 0) {
             perror("Error starting the treausreManager process");
             exit(3);
         }
@@ -55,7 +55,7 @@ static void listHunts(void) {
     int treasureManagerPid = startTreasureManager();
 
     if (treasureManagerPid == 0) {
-        if (execl("./cmake-build-debug/treasure_manager", "./treasure_manager", "--list_hunts", NULL) < 0) {
+        if (execl("./treasure_manager", "./treasure_manager", "--list_hunts", NULL) < 0) {
             perror("Error starting the treausreManager process");
             exit(3);
         }
@@ -87,7 +87,7 @@ static void calculateScores(void) {
             pid = fork();
             int status = 0;
             if (pid == 0) {
-                execl("./cmake-build-debug/calculate_score", "calculate_score", fileName, NULL);
+                execl("./calculate_score", "calculate_score", fileName, NULL);
             }
             if (waitpid(pid, &status, 0) < 0) {
                 perror("Error when destroying process");

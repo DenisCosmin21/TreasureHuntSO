@@ -139,7 +139,6 @@ int main(int argc, char *argv[]){
         }
 
         closeFile(huntFd);
-        //printTable(table);
         printUserValues(table);
 
         table = clearHashTable(table);

@@ -134,7 +134,7 @@ void startMonitor(void) {
 
             closeFile(pfd[1]);
 
-            if(execl("./cmake-build-debug/monitor", NULL) < 0){
+            if(execl("./monitor", NULL) < 0){
                 perror("Error starting monitor");
                 exit(3);
             }
