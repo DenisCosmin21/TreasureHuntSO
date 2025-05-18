@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -134,7 +135,7 @@ void startMonitor(void) {
 
             closeFile(pfd[1]);
 
-            if(execl("./monitor", NULL) < 0){
+            if(execl("./monitor", "./monitor",  NULL) < 0){
                 perror("Error starting monitor");
                 exit(3);
             }

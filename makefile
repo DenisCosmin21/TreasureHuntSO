@@ -1,6 +1,5 @@
 CC = gcc
 CFLAGS = -g -Wall -O3
-STD = -std=c99
 
 # Executable names
 TARGETS = treasure_manager treasure_hub monitor calculate_score

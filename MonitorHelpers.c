@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 #include "MonitorHelpers.h"
 #include <stdio.h>
 #include <stdlib.h>

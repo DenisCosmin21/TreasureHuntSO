@@ -1,7 +1,6 @@
 //
 // Created by debian on 5/13/25.
 //
-
 #include "AvlTree.h"
 #include <stdio.h>
 
@@ -122,14 +121,16 @@ node *getNode(avlTree tree, size_t key) {
             return &tree->data.data;
         }
     }
+
+    return NULL;
 }
 
 void printNode(node node) {
-    printf("{value : %lld, name : %s}", node.value, node.userName);
+    printf("{value : %lud, name : %s}", node.value, node.userName);
 }
 
 void printNode2(node2 node) {
-    printf("{key : %lld => ", node.key);
+    printf("{key : %lud => ", node.key);
     printNode(node.data);
     printf("}");
 }

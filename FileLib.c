@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,7 +6,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
-
 
 int openFile(const char *path, const char *mode) { //Mode as characters, r => read, w => write, a => append, etc..
     int openFlags = O_CREAT;

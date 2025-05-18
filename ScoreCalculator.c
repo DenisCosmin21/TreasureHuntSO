@@ -22,7 +22,7 @@ typedef struct {
 
 void printTable(hashTable *table) {
     for (size_t i = 0; i < MAX_BUCKETS; i++) {
-        printf("%lld : ", i);
+        printf("%lud : ", i);
         printTree(table->entries[i]);
         printf("\n");
     }
@@ -68,7 +68,7 @@ int existsEntry(hashTable *table, node data, size_t *entryKey) { //Use listKey a
     size_t tableKey = computedKey % MAX_BUCKETS;
 
     if (table->entries[tableKey] != NULL ) {
-        if (existsNode(table, computedKey) == 1) {
+        if (existsNode(table->entries[tableKey], computedKey) == 1) {
             if (entryKey != NULL) {
                 *entryKey = computedKey;
             }
@@ -98,7 +98,7 @@ int updateEntry(hashTable *table, node newData){
 
 void showNode(avlTree tree) {
     if (tree != NULL) {
-        printf("%s => %lld\n", tree->data.data.userName, tree->data.data.value);
+        printf("%s => %lud\n", tree->data.data.userName, tree->data.data.value);
     }
 }
 

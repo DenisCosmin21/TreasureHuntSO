@@ -1,5 +1,4 @@
 #include "Treasure.h"
-
 #include <stdio.h>
 #include <fcntl.h>
 #include <string.h>
@@ -140,7 +139,7 @@ void addTreasure(const char * huntId, TreasureData treasure) {
 
     writeTreasureToFile(huntFd, treasure);
 
-    char logMessage[1024] = {0};
+    char logMessage[1500] = {0};
 
     //Use a json format for the data to print as becouse of it's global usage
     sprintf(logMessage, "Treasure with id %lu successfully added to Hunt with id \"%s\".\n %s", treasure.treasureId, huntId, jsonEncodeTreasure(treasure));
@@ -268,7 +267,7 @@ static TreasureData getTreasureFromStorageById(const int huntFd, const ssize_t t
 
 TreasureData getTreasureFromHunt(const char * huntId, const char * treasureId) {
 
-    char logMessage[1024] = {0};
+    char logMessage[1500] = {0};
 
     if (!existsHunt(getHuntPathById(huntId))) {
         //First check if the hunt exists
@@ -309,7 +308,7 @@ static void showTreasuresFromHunt(const int huntFd) {
 }
 
 void listTreasuresFromHunt(const char * huntId) {
-    char logMessage[1024] = {0};
+    char logMessage[1500] = {0};
 
     if (!existsHunt(getHuntPathById(huntId))) {
         //First check if the hunt exists
@@ -324,7 +323,7 @@ void listTreasuresFromHunt(const char * huntId) {
 
     printf("Hunt name : %s\n", huntId);
 
-    printf("Hunt size : %lld\n", getFileSize(huntFd));
+    printf("Hunt size : %lud\n", getFileSize(huntFd));
 
     printf("Last modification : %s\n", getFileHumanReadableTime(huntFd));
 

@@ -5,6 +5,9 @@
 #ifndef FILELIB_H
 #define FILELIB_H
 
+#include <unistd.h>
+#include <time.h>
+
 int openFile(const char *path, const char *mode);
 
 void closeFile(const int fd);
